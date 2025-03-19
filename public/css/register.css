@@ -54,22 +54,24 @@ body {
 }
 
 .form-box h1 {
-    font-size: 36px;
+    font-size: 30px;
     color: #1D5D71;
+    min-height: 20px;
 }
 
 .line {
-    width: 200px;
+    width: 250px;
     height: 1px;
     background: #1D5D71;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    position: relative; /* Pastikan tetap berada di dalam parent */
+    z-index: 1; 
 }
 
 label {
     width: 100%;
     font-size: 18px;
     color: #333;
-    margin-bottom: 5px;
 }
 
 /* Input */
@@ -81,6 +83,7 @@ input {
     border-radius: 15px;
     background: #eaeaea;
     outline: none;
+    margin-bottom: 5px;
 }
 
 /* Password dengan ikon mata */
@@ -97,14 +100,14 @@ input {
 .toggle-password {
     position: absolute;
     right: 25px;
-    top: 50%;
+    top: 40%;
     transform: translateY(-50%);
     cursor: pointer;
     color: #555;
 }
 
-/* Tombol Login */
-.login-btn {
+/* Tombol Add */
+.add-btn {
     width: 30%;
     padding: 8px;
     font-size: 15px;
@@ -119,6 +122,6 @@ input {
     margin-top: 40px;
 }
 
-.login-btn:hover {
+.add-btn:hover {
     background: #3a0066;
 }
