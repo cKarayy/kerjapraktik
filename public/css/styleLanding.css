@@ -1,0 +1,39 @@
+body {
+    background-color: #fdf8e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    flex-direction: column;
+}
+
+@font-face {
+    font-family: 'Lalezar';
+    src: url('../fonts/Lalezar-Regular.ttf') format('truetype');
+}
+
+
+.container {
+    text-align: center;
+}
+
+.logo {
+    width: 60%;
+    max-width: 500px;
+    position: absolute;
+    top: 40%;
+    right: 35%;
+    transform: translateY(-50%);
+}
+
+.login-btn {
+    position: absolute;
+    bottom: 5%;
+    right: 45%;
+    color: #4B0082;
+    font-family: 'Lalezar';
+    font-size: 50px;
+    text-decoration: underline;
+}
