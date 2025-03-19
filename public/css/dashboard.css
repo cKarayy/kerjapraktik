@@ -1,0 +1,134 @@
+@font-face {
+    font-family: 'KumbhSans';
+    src: url('../fonts/KumbhSans-VariableFont_YOPQ\,wght.ttf') format('truetype');
+}
+
+body {
+    font-family: "KumbhSans";
+    background-color: #fdf8e6;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+.header {
+    width: 90%;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    padding-right: 10px;
+    position: absolute;
+    top: 0;
+}
+
+.logout img {
+    margin-top: 20px;
+    width: 40px;
+    cursor: pointer;
+}
+
+.logo {
+    width: 180px;
+}
+
+/* Kontainer Utama */
+.dashboard {
+    width: 90%;
+    display: flex;
+    justify-content: flex-end; /* Geser ke kanan */
+    margin-top: 150px;  
+}
+
+/* Grid Box */
+.grid-container {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto; /* Bisa digeser ke kanan */
+    padding: 20px;
+    white-space: nowrap;
+}
+
+/* Card Pilihan */
+.card {
+    background-color: #0c2c64;
+    width: 250px;
+    height: 300px;
+    border-radius: 10px;
+    text-align: center;
+    padding: 10px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    text-decoration: none; /* Hilangkan garis link */
+}
+
+/* Header Keterangan di Atas Gambar */
+.card-header {
+    background-color: #c19a5b;
+    width: 80%;
+    padding: 8px;
+    border-radius: 5px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    text-align: center;
+}
+
+.card-header .lock-icon {
+    width: 16px;
+    height: 16px;
+    right: 20px;
+}
+
+/* Konten dalam Card */
+.card-content {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+/* Gambar dalam Card */
+.card img {
+    width: 80%;
+    height: auto;
+    border-radius: 5px;
+}
+
+/* Efek Hover */
+.card:hover {
+    background-color: #184381;
+    transform: scale(1.05);
+    transition: 0.3s;
+}
+
+.image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.background-box {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background-color: white;
+    border-radius: 10px;
+    z-index: 0; /* Kotak putih di bawah */
+}
+
+.image-container img {
+    position: relative;
+    width: 80%; /* Sesuaikan ukuran gambar */
+    z-index: 1; /* Gambar berada di atas kotak putih */
+}
+

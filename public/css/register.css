@@ -64,7 +64,7 @@ body {
     height: 1px;
     background: #1D5D71;
     margin-bottom: 20px;
-    position: relative; /* Pastikan tetap berada di dalam parent */
+    position: relative; 
     z-index: 1; 
 }
 
