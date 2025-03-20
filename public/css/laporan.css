@@ -1,0 +1,184 @@
+@font-face {
+    font-family: 'Battambang';
+    src: url('../fonts/Battambang-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Belgrano';
+    src: url('../fonts/Belgrano-Regular.ttf') format('truetype');
+}
+
+body {
+    font-family: "Battambang";
+    background-color: #fdf8e6;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: 100vh;
+}
+
+/* HEADER */
+.header {
+    width: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 20px;
+}
+
+.header h2 {
+    text-align: center;
+    font-family: "Battambang";
+    margin: 0;
+    transform: translateX(20%);
+}
+
+.logo {
+    width: 160px;
+    position: absolute;
+    right: 0;
+    transform: translateX(120%);
+}
+
+.divider {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    width: 86%;
+    height: 1px;
+    background-color: black;
+}
+
+/* SHIFT RADIO BUTTON */
+.shift {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+}
+
+/* KETERANGAN & DROPDOWN */
+.keterangan-container {
+    display: flex;
+    align-items: center;
+    margin-top: 30px;
+    margin-left: 30px; 
+}
+
+.dropdown-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+}
+
+.dropdown-container img {
+    width: 16px;
+    height: 16px;
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    background: #CDC497;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    width: 100px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown div {
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.dropdown div:hover {
+    background-color: #f0f0f0;
+}
+
+.show {
+    display: block;
+}
+
+/* TABEL */
+.table-container {
+    width: 90%;
+    display: flex;
+    align-self: flex-start; 
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+.table {
+    width: 1000px; /* Sesuaikan dengan konten */
+    min-width: 70%; /* Pastikan cukup lebar */
+    border-collapse: collapse;
+    border-radius: 10px;
+}
+
+.table th, .table td {
+    border: 1px solid black;
+    padding: 5px;
+    text-align: center;
+}
+
+.table th {
+    background-color: #FFD700;
+}
+
+.table tr:nth-child(even) {
+    background-color: #ddd;
+}
+
+/* TOMBOL EXPORT */
+.export-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 150px;
+    transform: translateX(100px);
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    padding: 7px 15px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: "Battambang";
+    border-radius: 10px;
+    width: 170px; /* Lebar tombol */
+    height: 40px; /* Tinggi tombol */
+    background-color: #D9D9D9;
+    position: relative;
+    justify-content: flex-start; /* Tulisan di kanan */
+    overflow: visible;
+    margin-bottom: 10px;
+}
+
+/* Gambar di sisi kiri */
+.export-btn img {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    left: -15px; /* Biarkan sebagian keluar */
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Tulisan di dalam tombol */
+.export-btn span {
+    margin-left: 35px; /* Jarak teks dari gambar */
+}
+

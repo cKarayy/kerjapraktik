@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login</title>
     <link rel="stylesheet" href="{{ asset('css/styleLogin.css') }}">
-    <script src="script.js" defer></script>
+    <!-- <script src="script.js" defer></script>-->
 </head>
 <body>
         <!-- Kotak Kiri (Logo) -->
