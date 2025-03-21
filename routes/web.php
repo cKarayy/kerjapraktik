@@ -27,5 +27,14 @@ Route::get('/laporan', function () {
 })->name('laporan');
 
 Route::get('/data', function () {
-    return view('admin.data');
-})->name('data');
+    $employees = array_map(function ($i) {
+        return [
+            'id' => $i + 1,
+            'name' => $i === 22 ? 'Putri Tapasya' : 'Sony Palton',
+            'role' => $i === 22 ? 'Food Runner' : 'Perwakilan Owner',
+            'status' => $i === 22 ? 'resign' : 'active',
+        ];
+    }, range(0, 22));
+
+    return view('admin.data', compact('employees'));
+});

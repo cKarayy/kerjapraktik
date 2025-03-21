@@ -19,20 +19,25 @@
     <div class="divider"></div>
 
     <!-- FILTER SHIFT & KETERANGAN -->
-        <div class="keterangan-container">
-            <span>KETERANGAN</span>
-            <div class="dropdown-container" onclick="toggleDropdown()">
-                <img src="{{ asset('images/dd.png') }}" alt="Dropdown">
-                <div class="dropdown">
-                    <div onclick="selectOption(this, 'izin')">IZIN</div>
-                    <div onclick="selectOption(this, 'cuti')">CUTI</div>
-                </div>
-            </div>
-            <div class="shift">
-                <label><input type="radio" name="shift" value="pagi"> PAGI</label>
-                <label><input type="radio" name="shift" value="malam"> MALAM</label>
+    <div class="keterangan-container">
+        <span>KETERANGAN</span>
+        <div class="dropdown-container" onclick="toggleDropdown()">
+            <img src="{{ asset('images/dd.png') }}" alt="Dropdown">
+            <div class="dropdown" id="dropdownMenu">
+                <div class="option" onclick="selectOption(this)">IZIN</div>
+                <div class="option" onclick="selectOption(this)">CUTI</div>
             </div>
         </div>
+        <label class="custom-radio">
+            <input type="radio" name="shift" value="pagi">
+            <span class="checkmark"></span> PAGI
+        </label>
+        <label class="custom-radio">
+            <input type="radio" name="shift" value="malam">
+            <span class="checkmark"></span> MALAM
+        </label>
+    </div>
+
     <!-- TABEL KEHADIRAN -->
     <div class="table-container">
         <table class="table">
@@ -72,19 +77,33 @@
 
     <script>
         function toggleDropdown() {
-            document.querySelector('.dropdown').classList.toggle('show');
+            document.getElementById("dropdownMenu").classList.toggle("show");
         }
 
-        function selectOption(element, option) {
-            document.querySelector('.dropdown-container').style.backgroundColor = option === 'izin' ? '#543310' : '#CDC497';
-            document.querySelector('.dropdown').classList.remove('show');
+        function selectOption(selectedElement) {
+            // Reset semua opsi ke warna default
+            document.querySelectorAll(".option").forEach(option => {
+                option.classList.remove("selected");
+            });
+
+            // Tambahkan class "selected" ke elemen yang dipilih
+            selectedElement.classList.add("selected");
+
+            // Tutup dropdown setelah memilih
+            document.getElementById("dropdownMenu").classList.remove("show");
         }
 
-        document.addEventListener("click", function(event) {
-            if (!event.target.closest(".dropdown-container")) {
-                document.querySelector('.dropdown').classList.remove('show');
+        // Tutup dropdown jika klik di luar area dropdown
+        document.addEventListener("click", function (event) {
+            const dropdownBox = document.querySelector(".dropdown-container");
+            const dropdownMenu = document.getElementById("dropdownMenu");
+
+            if (!dropdownBox.contains(event.target)) {
+                dropdownMenu.classList.remove("show");
             }
         });
+
+
     </script>
 
 
