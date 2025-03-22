@@ -130,7 +130,7 @@ body {
 .table-container {
     width: 90%;
     display: flex;
-    align-self: flex-start; 
+    align-self: flex-start;
     margin-top: 10px;
     margin-left: 20px;
 }
