@@ -1,10 +1,11 @@
+<!-- belum save ke database kl dipencet done-->
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Kepegawaian</title>
-    <link rel="stylesheet" href="{{ asset('css/data.css') }}">
+    <title>Data Kepegawaian Perwakilan Owner</title>
+    <link rel="stylesheet" href="{{ asset('css/admin/data.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
@@ -16,7 +17,7 @@
     <div class="divider"></div>
 
     <!-- Opsi Radio Button -->
-    <div id="adminOptions" style="display: none;"class="action-selection">
+    <div id="adminOptions" style="display: flex;"class="action-selection">
         <label class="custom-radio">
             <input type="radio" id="add" name="action" value="add">
             <span class="checkmark"></span> ADD
@@ -54,89 +55,9 @@
         </div>
     </div>
 
-    <!-- Ikon Edit & Kunci -->
-    <div class="action-icons">
-        <img src="{{ asset('images/edit.png') }}" alt="Edit" class="icon-edit" onclick="openDialog()">
-        <img src="{{ asset('images/lock.png') }}" alt="Lock" class="icon-lock" onclick="openDialog()">
-    </div>
-
-    <!-- Dialog Password -->
-    <div id="dialog">
-        <p>Enter Password:</p>
-        <div class="password-container">
-            <input type="password" id="password">
-            <i id="toggleEye" class="fa-solid fa-eye-slash" onclick="togglePassword()"></i>
-        </div>
-        <div class="dialog-buttons">
-            <button class="btn-done" onclick="handleSubmit()">DONE</button>
-            <button class="btn-cancel" onclick="closeDialog()">CANCEL</button>
-        </div>
-    </div>
-
-    <!-- Notifikasi -->
-    <div id="notification">
-        <img id="notifImage" src="" alt="Status">
-        <p id="notifText"></p>
-    </div>
-
     <script>
         let passwordInput = document.getElementById("password");
         let adminOptions = document.getElementById("adminOptions");
-        let notification = document.getElementById("notification");
-        let notifImage = document.getElementById("notifImage");
-        let notifText = document.getElementById("notifText");
-        let eyeIcon = document.getElementById("toggleEye");
-
-        let successImage = "{{ asset('images/success.png') }}";
-        let failedImage = "{{ asset('images/failed.png') }}";
-
-        function openDialog() {
-            document.getElementById("dialog").style.display = "block";
-        }
-
-        function closeDialog() {
-            document.getElementById("dialog").style.display = "none";
-        }
-
-        function togglePassword() {
-            if (passwordInput.type === "password") {
-                passwordInput.type = "text";
-                eyeIcon.classList.remove("fa-eye-slash");
-                eyeIcon.classList.add("fa-eye");
-            } else {
-                passwordInput.type = "password";
-                eyeIcon.classList.remove("fa-eye");
-                eyeIcon.classList.add("fa-eye-slash");
-            }
-        }
-
-        function handleSubmit() {
-            let password = passwordInput.value;
-            document.getElementById("dialog").style.display = "none";
-
-            setTimeout(() => {
-                if (password === "1234") {
-                    notifImage.src = successImage;
-                    notifText.innerText = "BERHASIL!";
-                    notification.style.display = "flex";
-
-                    setTimeout(() => {
-                        notification.style.display = "none";
-
-                        // Menampilkan radio button setelah sukses
-                        adminOptions.style.display = "block";
-                    }, 2000);
-                } else {
-                    notifImage.src = failedImage;
-                    notifText.innerText = "GAGAL!";
-                    notification.style.display = "flex";
-
-                    setTimeout(() => {
-                        notification.style.display = "none";
-                    }, 2000);
-                }
-            }, 100);
-        }
 
         function applyAction() {
             let selectedAction = document.querySelector('input[name="action"]:checked');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin</title>
+    <title>Dashboard Perwakilan Owner</title>
     <link rel="stylesheet" href="{{ asset('css/admin/dashboard.css') }}">
 </head>
 <body>
@@ -31,7 +31,7 @@
                     <img src="{{ asset('images/laporan_absensi.png') }}" alt="Laporan Absensi">
                 </div>
             </a>
-            <a href="{{ route('data_admin') }}" class="card">
+            <a href="{{ route('data_py') }}" class="card">
                 <div class="card-header">DATA PEGAWAI</div>
                 <div class="card-content">
                     <div class="image-container">
@@ -40,15 +40,14 @@
                     </div>
                 </div>
             </a>
-            {{-- <a href="{{ route('register') }}" class="card" onclick="checkAuth(event)">
+            <a href="{{ route('register') }}" class="card" onclick="checkAuth(event)">
                 <div class="card-header">
-                    <img src="{{ asset('images/lock.png') }}" alt="Lock" class="lock-icon">
                     NEW ADMIN
                 </div>
                 <div class="card-content">
                     <img src="{{ asset('images/new.png') }}" alt="New Admin">
                 </div>
-            </a> --}}
+            </a>
         </div>
     </div>
 </body>

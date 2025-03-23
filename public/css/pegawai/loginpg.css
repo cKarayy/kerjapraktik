@@ -1,0 +1,172 @@
+@font-face {
+    font-family: 'KronaOne';
+    src: url('../fonts/KronaOne-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'GravitasOne';
+    src: url('../fonts/GravitasOne-Regular.ttf') format('truetype');
+}
+
+body {
+    background-color: #fdf8e6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    flex-direction: column;
+}
+
+/* Kontainer utama untuk memastikan logo dan form berada di tengah */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Kotak Logo */
+.logo-box {
+    width: 280px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #ded3b9;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: -50px; /* Supaya form naik lebih dekat dengan logo */
+    z-index: 0;
+}
+
+.logo-img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+}
+
+/* Kotak Form Login */
+.form-box {
+    width: 280px;
+    padding: 30px;
+    background: #faf5dc;
+    border-radius: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Memberi jarak antar elemen di dalam form */
+    text-align: center;
+}
+
+/* Judul Login */
+.form-box h1 {
+    font-size: 28px;
+    color: #1D5D71;
+    font-family: 'KronaOne';
+    margin-bottom: 5px; /* Mendekatkan ke garis */
+    margin-top: 50px;
+}
+
+/* Garis */
+.line {
+    width: 150px;
+    height: 2px;
+    background: #1D5D71;
+    margin-bottom: 15px; /* Menambah jarak sedikit dari garis ke input */
+}
+
+/* Label untuk input */
+.label-text {
+    font-size: 16px;
+    color: #333;
+    font-family: 'KronaOne';
+    text-align: center;
+    width: 100%;
+    margin-bottom: 5px; /* Jarak antara label dan input */
+}
+
+/* Input */
+input {
+    width: 60%;
+    padding: 10px;
+    font-size: 14px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background: #eaeaea;
+    outline: none;
+    margin-left: 50px;
+    margin-bottom: 15px; /* Jarak antar input */
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Menyesuaikan ke kiri */
+    width: 100%;
+    margin-bottom: 15px; /* Jarak antar input */
+}
+
+
+/* Password dengan ikon mata */
+/* Kontainer khusus untuk input password */
+.password-container {
+    position: relative;
+    width: 87%;
+    display: flex;
+    align-items: center;
+}
+
+/* Input password tetap seperti sebelumnya */
+.password-container input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    background: #eaeaea;
+    outline: none;
+    padding-right: 40px; /* Ruang tambahan untuk ikon mata */
+}
+
+/* Ikon mata pindah ke dalam kotak input */
+.password-container i {
+    position: absolute;
+    right: 15px;
+    top: 40%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+    font-size: 18px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+}
+
+/* Tombol Login */
+.login-btn {
+    width: 40%;
+    padding: 10px;
+    font-size: 16px;
+    font-family: 'GravitasOne';
+    background: #4B0082;
+    font-weight: bold;
+    color: #FAFF00;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+}
+
+.login-btn:hover {
+    background: #3a0066;
+}

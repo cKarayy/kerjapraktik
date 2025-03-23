@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Kehadiran Pegawai</title>
-    <link rel="stylesheet" href="{{ asset('css/laporan.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin/laporan.css') }}">
 </head>
 <body>
 <div class="container">
@@ -65,11 +65,11 @@
         <!-- TOMBOL EXPORT -->
         <div class="export-buttons">
             <button class="export-btn">
-                <img src="{{ asset('images/excel.png') }}" alt="Excel"> 
+                <img src="{{ asset('images/excel.png') }}" alt="Excel">
                 <span>EXPORT TO EXCEL</span>
             </button>
             <button class="export-btn">
-                <img src="{{ asset('images/gambar_pdf.png') }}" alt="PDF"> 
+                <img src="{{ asset('images/gambar_pdf.png') }}" alt="PDF">
                 <span>EXPORT TO PDF</span>
             </button>
         </div>

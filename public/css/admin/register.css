@@ -64,8 +64,8 @@ body {
     height: 1px;
     background: #1D5D71;
     margin-bottom: 20px;
-    position: relative; 
-    z-index: 1; 
+    position: relative;
+    z-index: 1;
 }
 
 label {
@@ -75,32 +75,42 @@ label {
 }
 
 /* Input */
-input {
-    width: 90%;
-    padding: 12px;
-    font-size: 16px;
+input, .password-container input {
+    width: 100%; /* Samakan width */
+    padding: 12px; /* Samakan padding */
+    font-size: 16px; /* Samakan font-size */
     border: 2px solid #ccc;
-    border-radius: 15px;
+    border-radius: 15px; /* Samakan border-radius */
     background: #eaeaea;
     outline: none;
-    margin-bottom: 5px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
 }
 
-/* Password dengan ikon mata */
+/* Perbaiki password container */
 .password-container {
-    width: 100%;
     position: relative;
+    width: 100%; /* Samakan dengan input lainnya */
+    display: flex;
+    align-items: center;
 }
 
-.password-container input {
-    width: 80%;
-    padding-right: 40px;
+/* Ikon mata di dalam input */
+.password-container i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-80%);
+    cursor: pointer;
+    color: #555;
+    font-size: 18px;
 }
+
 
 .toggle-password {
     position: absolute;
     right: 25px;
-    top: 40%;
+    top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
     color: #555;
