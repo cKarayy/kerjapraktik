@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -53,11 +54,11 @@ class AdminController extends Controller
         if ($admin && Hash::check($request->password, $admin->password)) {
             // Mengautentikasi admin
             Auth::login($admin);
+            Log::info('Login berhasil untuk admin: ' . $admin->full_name);
 
-            // Mengarahkan ke dashboard admin setelah login sukses
             return redirect()->route('admin.dashboard');
+
         } else {
-            // Jika login gagal
             return redirect()->route('admin.login')->with('error', 'Nama lengkap atau password salah');
         }
     }

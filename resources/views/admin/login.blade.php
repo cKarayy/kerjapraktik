@@ -8,12 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
-    <!-- Kotak Kiri (Logo) -->
     <div class="logo-box">
         <img src="{{ asset('images/logo.png') }}" alt="Logo" width="300" height="150" style="margin-left: 30px;">
     </div>
 
-    <!-- Kotak Kanan (Form Login) -->
     <div class="form-box">
         <h1>LOGIN</h1>
         <div class="line"></div>
