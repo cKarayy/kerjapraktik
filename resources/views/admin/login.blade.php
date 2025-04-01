@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login</title>
     <link rel="stylesheet" href="{{ asset('css/admin/styleLogin.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"></head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 <body>
     <!-- Kotak Kiri (Logo) -->
@@ -18,16 +18,24 @@
         <h1>LOGIN</h1>
         <div class="line"></div>
 
-        <label for="input-container">Username</label>
-        <input type="text" id="username">
+        <form action="{{ route('admin.login.submit') }}" method="POST">
+            @csrf
+            <label for="input-container">Nama Lengkap</label>
+            <input type="text" id="username" name="full_name" required>
 
-        <label for="input-container">Password</label>
-        <div class="password-container">
-            <input type="password" id="password">
-            <i id="toggleEye" class="fa-solid fa-eye-slash" onclick="togglePassword()"></i>
-        </div>
+            <label for="input-container">Password</label>
+            <div class="password-container">
+                <input type="password" id="password" name="password" required>
+                <i id="toggleEye" class="fa-solid fa-eye-slash" onclick="togglePassword()"></i>
+            </div>
 
-        <button class="login-btn">LOGIN</button>
+            <button class="login-btn">LOGIN</button>
+        </form>
+
+
+        @if(session('error'))
+            <div style="color: red;">{{ session('error') }}</div>
+        @endif
     </div>
 
     <script>
@@ -48,3 +56,4 @@
     </script>
 </body>
 </html>
+

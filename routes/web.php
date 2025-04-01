@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminController;
 
 Route::post('/logout', function () {
     //Auth::logout();
-    return redirect('/login');
+    return redirect('/admin.login');
 })->name('logout');
 
 //admin
@@ -12,17 +13,14 @@ Route::get('/', function () {
     return view('admin.welcome');
 });
 
-Route::get('/login', function () {
-    return view('admin.login');
-})->name('login');
+Route::get('/admin/register', [AdminController::class, 'showRegister'])->name('admin.register');
+Route::post('/admin/register', [AdminController::class, 'registerAdmin'])->name('admin.register.submit');
 
-Route::get('/register', function () {
-    return view('admin.register');
-})->name('register');
+Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [AdminController::class, 'loginAdmin'])->name('admin.login.submit');
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('auth:admin');
 
-Route::get('/dashboard', function () {
-    return view('admin.dashboard');
-})->name('home');
+Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
 
 Route::get('/qrcode', function () {
     return view('admin.qr');
