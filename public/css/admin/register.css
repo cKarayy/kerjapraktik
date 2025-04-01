@@ -130,6 +130,7 @@ input, .password-container input {
     text-transform: uppercase;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
     margin-top: 40px;
+    margin-left: 110px;
 }
 
 .add-btn:hover {
