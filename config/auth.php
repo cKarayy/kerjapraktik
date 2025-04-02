@@ -66,15 +66,15 @@ return [
     */
 
     'providers' => [
-        'admins' => [
+        'users' => [ // Ditambahkan agar default auth untuk 'web' berfungsi.
             'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
+            'model' => App\Models\User::class, // Pastikan model User ada
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class, // Model untuk admin
+        ],
     ],
 
     /*

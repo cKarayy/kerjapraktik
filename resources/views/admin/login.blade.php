@@ -16,20 +16,22 @@
         <h1>LOGIN</h1>
         <div class="line"></div>
 
-        <form action="{{ route('admin.login.submit') }}" method="POST">
+        <form action="{{ route('admin.login') }}" method="POST">
             @csrf
-            <label for="input-container">Nama Lengkap</label>
-            <input type="text" id="username" name="full_name" required>
+            <label for="full_name">Nama Lengkap</label>
+            <input type="text" id="full_name" name="full_name" required>
 
-            <label for="input-container">Password</label>
+            <label for="password">Password</label>
             <div class="password-container">
                 <input type="password" id="password" name="password" required>
                 <i id="toggleEye" class="fa-solid fa-eye-slash" onclick="togglePassword()"></i>
+                @error('password')
+                    <div>{{ $message }}</div>
+                @enderror
             </div>
 
-            <button class="login-btn">LOGIN</button>
+            <button type="submit" class="login-btn">LOGIN</button>
         </form>
-
 
         @if(session('error'))
             <div style="color: red;">{{ session('error') }}</div>
@@ -51,7 +53,12 @@
                 toggleIcon.classList.add("fa-eye-slash");
             }
         }
+
+
+    @if(session('console_log'))
+        console.log("{{ session('console_log') }}");
+    @endif
+
     </script>
 </body>
 </html>
-

@@ -8,12 +8,12 @@
 </head>
 <body>
     <div class="header">
-        <form action="{{ route('admin.logout') }}" method="POST">
+        <form action="{{ route('admin.logout') }}" method="POST" id="logout-form" style="display: none;">
             @csrf
-            <button type="submit" class="logout">
-                <img src="{{ asset('images/logout.png') }}" alt="Logout">
-            </button>
         </form>
+
+        <img src="{{ asset('images/logout.png') }}" alt="Logout" class="logout" onclick="document.getElementById('logout-form').submit();">
+        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
     </div>
 
     <div class="dashboard">
@@ -27,7 +27,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('laporan') }}" class="card">
+            <a href="{{ route('admin.laporan') }}" class="card">
                 <div class="card-header">LAPORAN ABSENSI</div>
                 <div class="card-content">
                     <img src="{{ asset('images/laporan_absensi.png') }}" alt="Laporan Absensi">
@@ -44,5 +44,11 @@
             </a>
         </div>
     </div>
+
+    <script>
+            @if(session('console_log'))
+        console.log("{{ session('console_log') }}");
+    @endif
+    </script>
 </body>
 </html>

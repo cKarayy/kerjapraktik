@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\QRController;
+use App\Http\Controllers\LaporanKehadiranController;
 
 Route::post('/logout', function () {
     //Auth::logout();
@@ -16,19 +19,21 @@ Route::get('/', function () {
 Route::get('/admin/register', [AdminController::class, 'showRegister'])->name('admin.register');
 Route::post('/admin/register', [AdminController::class, 'registerAdmin'])->name('admin.register.submit');
 
-Route::get('/admin/login', [AdminController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminController::class, 'loginAdmin'])->name('admin.login.submit');
-Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard')->middleware('auth:admin');
+Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login');
+Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login');
+Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
-Route::post('/logout', [AdminController::class, 'logout'])->name('admin.logout');
+Route::get('/admin/dashboard', function () {
+    return view('admin.dashboard');
+})->name('admin.dashboard')->middleware('auth:admin');
 
 Route::get('/qrcode', function () {
     return view('admin.qr');
 })->name('qrcode');
 
-Route::get('/laporan', function () {
-    return view('admin.laporan');
-})->name('laporan');
+Route::post('/scan-qr', [QRController::class, 'scanQR'])->name('scan.qr');
+
+Route::get('/admin/laporan', [LaporanKehadiranController::class, 'getReport'])->name('admin.laporan');
 
 Route::get('/data_admin', function () {
     $employees = array_map(function ($i) {
