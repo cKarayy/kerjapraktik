@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('css/admin/qr.css') }}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
@@ -31,24 +31,44 @@
     <div class="card-content">
         <div class="image-container">
             <div class="background-box"></div>
-            <img id="qr-code" src="" alt="QR Code"> <!-- Ganti QR Code secara dinamis -->
+            <img src="data:image/png;base64,{{ $qr }}" alt="QR Code">
         </div>
     </div>
 
     <p id="time-display"></p>
-    <p id="delay-display"></p> <!-- Menampilkan keterlambatan -->
+    <p id="delay-display"></p>
 
     <script>
-        let shift = ''; // Untuk menyimpan shift yang dipilih
-
+        let currentQR = '';
+        let shift = '';
+        
         function fetchQRCode() {
             $.get('/generate-qr', function(data) {
-                // Perbarui QR Code dengan base64
-                $('#qr-code').attr('src', 'data:image/png;base64,' + data.qr);
+                console.log("QR Code Data:", data); // Debugging
 
-                // Simpan QR Code yang dihasilkan untuk absensi
-                localStorage.setItem('latestQR', data.code);
+                if (data.qr && data.qr.length > 100) {
+                    $('#qr-code').attr('src', 'data:image/png;base64,' + data.qr);
+                } else {
+                    console.error("QR Code tidak ditemukan atau tidak valid");
+                }
+            }).fail(function(xhr, status, error) {
+                console.error("Gagal mengambil QR Code dari server: ", error);
             });
+        }
+
+        function calculateDelay(selectedShift) {
+            let shiftStart = selectedShift === 'pagi' ? 8 :
+                             selectedShift === 'middle' ? 14 : 20;
+
+            let now = new Date();
+            let delayMinutes = (now.getHours() - shiftStart) * 60 + now.getMinutes();
+
+            if (delayMinutes < 0) delayMinutes = 0;
+
+            let hours = Math.floor(delayMinutes / 60);
+            let minutes = delayMinutes % 60;
+            document.getElementById("delay-display").textContent =
+                delayMinutes > 0 ? `Keterlambatan: ${hours} jam ${minutes} menit` : 'Tidak terlambat';
         }
 
         function startCountdown() {
@@ -64,7 +84,7 @@
                     timeLeft--;
                 } else {
                     timeLeft = 5;
-                    fetchQRCode(); // Ambil QR Code baru setiap 5 detik
+                    fetchQRCode(); // Ambil ulang QR setiap 5 detik
                 }
             }
 
@@ -72,49 +92,10 @@
             setInterval(updateDisplay, 1000);
         }
 
-        function calculateDelay(selectedShift) {
-            // Tentukan jam masuk untuk shift pagi dan malam
-            let shiftStartTime = selectedShift === 'pagi' ? 8 : 20; // Shift Pagi: 08:00, Shift Malam: 20:00
-
-            let currentTime = new Date();
-            let currentHour = currentTime.getHours();
-            let currentMinute = currentTime.getMinutes();
-
-            // Hitung keterlambatan
-            let delayMinutes = (currentHour - shiftStartTime) * 60 + currentMinute;
-
-            // Jika belum melewati waktu shift
-            if (delayMinutes < 0) {
-                delayMinutes = 0; // Tidak ada keterlambatan sebelum jam mulai
-            }
-
-            // Tampilkan keterlambatan
-            let delayText = '';
-            if (delayMinutes > 0) {
-                let hours = Math.floor(delayMinutes / 60);
-                let minutes = delayMinutes % 60;
-                delayText = `Keterlambatan: ${hours} jam ${minutes} menit`;
-            } else {
-                delayText = 'Tidak terlambat';
-            }
-
-            document.getElementById("delay-display").textContent = delayText;
-        }
-
-        function scanQRCode(code) {
-            $.post("{{ route('scan.qr') }}", {
-                _token: "{{ csrf_token() }}",
-                code: code
-            }, function(response) {
-                alert(response.message);
-            });
-        }
-
-        // Ambil QR Code pertama kali
         window.onload = function() {
             fetchQRCode();
             startCountdown();
-        };
+        }
     </script>
 </body>
 </html>

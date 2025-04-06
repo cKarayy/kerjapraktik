@@ -8,9 +8,13 @@
 </head>
 <body>
     <div class="header">
-        <a href="{{ route(name: 'login') }}" class="logout">
-            <img src="{{ asset('images/logout.png') }}" alt="Logout">
-        </a>
+        <form action="{{ route('admin.logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="logout">
+                <img src="{{ asset('images/logout.png') }}" alt="Logout">
+            </button>
+        </form>
+
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
     </div>
 
@@ -25,7 +29,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('laporan') }}" class="card">
+            <a href="{{ route('admin.laporan') }}" class="card">
                 <div class="card-header">LAPORAN ABSENSI</div>
                 <div class="card-content">
                     <img src="{{ asset('images/laporan_absensi.png') }}" alt="Laporan Absensi">
@@ -40,7 +44,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('register') }}" class="card" onclick="checkAuth(event)">
+            <a href="{{ route('admin.register') }}" class="card" onclick="checkAuth(event)">
                 <div class="card-header">
                     NEW ADMIN
                 </div>

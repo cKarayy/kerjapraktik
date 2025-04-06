@@ -32,13 +32,21 @@
                 <input type="password" id="password" name="password" required>
                 <i id="toggleEyePassword" class="fa-solid fa-eye-slash" onclick="togglePassword('password', 'toggleEyePassword')"></i>
             </div>
-            @error('password') <p class="error">{{ $message }}</p> @enderror
+            @error('password')
+                <p class="error">{{ $message }}</p>
+            @enderror
 
             <label for="password_confirmation">Confirm Password</label>
             <div class="password-container">
                 <input type="password" id="password_confirmation" name="password_confirmation" required>
                 <i id="toggleEyeConfirm" class="fa-solid fa-eye-slash" onclick="togglePassword('password_confirmation', 'toggleEyeConfirm')"></i>
             </div>
+
+            <label for="role">Daftar Sebagai:</label>
+            <select name="role" required>
+                <option value="admin">Admin</option>
+                <option value="penyelia">Penyelia</option>
+            </select>
 
             <button type="submit" class="add-btn">ADD</button>
         </form>

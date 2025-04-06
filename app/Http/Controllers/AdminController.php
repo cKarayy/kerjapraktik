@@ -13,30 +13,41 @@ class AdminController extends Controller
     // Fungsi untuk mendaftarkan admin
     public function registerAdmin(Request $request)
     {
-        Log::info('registerAdmin() dipanggil', ['request_data' => $request->all()]);
-
         $request->validate([
             'full_name' => 'required|string|max:255|unique:admins',
             'password' => 'required|min:6|confirmed',
+            'role' => 'required|in:admin,penyelia',
         ]);
 
-        // Membuat admin baru
-        $admin = Admin::create([
+        // Cek jumlah penyelia
+        if ($request->role === 'penyelia' && Admin::where('role', 'penyelia')->count() >= 2) {
+            return redirect()->route('admin.register')->with('error', 'Penyelia sudah mencapai batas maksimal (2 orang).');
+        }
+
+        Admin::create([
             'full_name' => $request->full_name,
             'password' => Hash::make($request->password),
+            'role' => $request->role, // PASTIKAN ADA INI
         ]);
 
-        Log::info('Admin berhasil didaftarkan', ['admin' => $admin]);
-
-        // Redirect ke halaman login dengan pesan sukses
-        return redirect()->route('admin.login')->with('success', 'Admin berhasil didaftarkan!');
+        return redirect()->route('admin.login')->with('success', 'Pendaftaran berhasil!');
     }
+
 
     // Menampilkan halaman register
     public function showRegister()
     {
-        Log::info('Menampilkan halaman register');
         return view('admin.register');
+    }
+
+    public function penyeliaDashboard()
+    {
+        return view('penyelia.db');
+    }
+
+    public function admDashboard()
+    {
+        return view('admin.dashboard');
     }
 
 }

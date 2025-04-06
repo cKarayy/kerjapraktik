@@ -16,27 +16,29 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // Validasi data inputan
-        $request->validate([
-            'full_name' => 'required|string',
-            'password' => 'required|min:6',
-        ]);
-
-        // Mencari user berdasarkan full name
         $admin = Admin::where('full_name', $request->full_name)->first();
 
         if ($admin && Hash::check($request->password, $admin->password)) {
             Auth::guard('admin')->login($admin);
-            return redirect()->route('admin.dashboard');
+
+            if ($admin->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            } elseif ($admin->role === 'penyelia') {
+                return redirect()->route('dashboard_py');
+            }
         }
 
-        return back()->withErrors(['full_name' => 'Nama lengkap atau password salah.']);
+        return redirect()->route('admin.login')->with('error', 'Nama lengkap atau password salah');
     }
 
     // Proses logout
-    public function logout()
+    public function logout(Request $request)
     {
-        Auth::guard('admin')->logout();
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect()->route('admin.login');
     }
+
 }

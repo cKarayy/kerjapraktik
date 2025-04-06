@@ -136,3 +136,8 @@ input, .password-container input {
 .add-btn:hover {
     background: #3a0066;
 }
+
+.error {
+    color: red;
+    font-size: 20px;
+}

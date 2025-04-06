@@ -3,35 +3,44 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use App\Models\Absensi;
 use Carbon\Carbon;
+use App\Models\QR;
+use Illuminate\Support\Facades\Log;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QRController extends Controller
 {
-    public function generateQR()
+    public function generate()
     {
-        $randomCode = uniqid(); // Kode unik setiap 5 detik
-        $qr = QrCode::size(200)->generate($randomCode);
+        $randomCode = strtoupper(bin2hex(random_bytes(5))); // Buat kode unik
+        $qrCode = QrCode::format('png')->size(300)->generate($randomCode);
+        $base64Qr = base64_encode($qrCode);
 
         return response()->json([
-            'qr' => base64_encode($qr),
-            'code' => $randomCode
+            'qr' => $base64Qr,
+            'code' => $randomCode,
         ]);
     }
-
-    // Simpan ke database saat QR Code dipindai
-    public function scanQR(Request $request)
+    public function scan(Request $request)
     {
-        $kode = $request->input('code');
+        $request->validate(['code' => 'required|string']);
 
-        // Simpan laporan absensi pegawai
-        Absensi::create([
-            'pegawai_id' => auth()->guard('admin')->id(), // Pegawai yang login
-            'qr_code' => $kode,
-            'scan_time' => Carbon::now(),
-        ]);
+        $qr = QR::where('code', $request->code)->first();
 
-        return response()->json(['message' => 'Absensi berhasil tercatat!']);
+        if (!$qr) {
+            return response()->json(['message' => 'QR Code tidak ditemukan.'], 404);
+        }
+
+        if ($qr->is_used) {
+            return response()->json(['message' => 'QR Code sudah digunakan.'], 403);
+        }
+
+        if (now()->greaterThan($qr->valid_until)) {
+            return response()->json(['message' => 'QR Code sudah kedaluwarsa.'], 403);
+        }
+
+        $qr->update(['is_used' => true]);
+
+        return response()->json(['message' => 'Absensi berhasil!']);
     }
 }
