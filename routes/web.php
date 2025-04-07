@@ -96,10 +96,11 @@ Route::get('/data_py', function () {
 //     return redirect()->route('data_py')->with('success', 'Pegawai berhasil ditambahkan!');
 // })->name('data_py.add');
 
-Route::post('/data_py/add', [EmployeeController::class, 'store'])->name('data_py.add');
-Route::post('/data_py/delete', action: [EmployeeController::class, 'destroy'])->name('data_py.delete');
-Route::post('/data_py/edit', action: [EmployeeController::class, 'update'])->name('data_py.edit');
-Route::post('/data-pegawai/save-all', action: [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
+Route::post('/data_py/delete', [EmployeeController::class, 'delete'])->name('data_py.delete');
+Route::post('/data_py/edit', [EmployeeController::class, 'edit'])->name('data_py.edit');
+Route::post('/data-pegawai/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+
 //pegawai
 Route::get('/pegawai/login', function () {
     return view('pegawai.loginPg');

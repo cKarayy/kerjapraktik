@@ -15,7 +15,7 @@
     <div class="divider"></div>
 
     <!-- Opsi Radio Button -->
-    <div id="adminOptions" style="display: flex;" class="action-selection">
+    <div id="adminOptions" class="action-selection" style="display: flex;">
         <label class="custom-radio">
             <input type="radio" id="add" name="action" value="add">
             <span class="checkmark"></span> ADD
@@ -28,7 +28,8 @@
             <input type="radio" id="delete" name="action" value="delete">
             <span class="checkmark"></span> DELETE
         </label>
-        <button class="btn-container" id="doneButton">DONE</button>
+        <button class="btn-done" id="doneButton">DONE</button>
+        <button class="btn-cancel" id="cancelButton">CANCEL</button>
     </div>
 
     <div class="container">
@@ -54,14 +55,29 @@
         </div>
     </div>
 
+    <!-- popup add -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <h2>Tambah Karyawan</h2>
+            <input type="number" id="jumlahInput" min="1" placeholder="Masukkan jumlah">
+            <div class="button-group">
+                <button class="done-btn" onclick="addNewEmployees()">DONE</button>
+                <button class="cancel-btn" onclick="closeEmployeeForm()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         let deletedIds = [];
 
         function deleteEmployee(icon) {
-            let card = icon.closest(".employee-card");
-            let id = card.getAttribute("data-id");
-            if (id) deletedIds.push(id);
-            card.remove();
+            const card = icon.closest('.employee-card');
+            const id = card.getAttribute('data-id');
+            if (id) {
+                deletedIds.push(id);
+                card.remove();
+            }
         }
 
         function applyAction() {
@@ -74,53 +90,61 @@
             let actionValue = selectedAction.value;
             let employeeCards = document.querySelectorAll(".employee-card");
 
-            if (actionValue !== "add") {
-                document.querySelectorAll(".employee-card.new").forEach(card => card.remove());
-            }
-
+            // Reset semua kartu
             employeeCards.forEach(card => {
                 let name = card.querySelector(".employee-name");
                 let role = card.querySelector(".employee-role");
                 let status = card.querySelector(".status-box");
+                let shift = card.querySelector(".shift-box");
                 let deleteIcon = card.querySelector(".delete-icon");
 
                 let isResign = status.innerText.trim().toLowerCase() === "resign";
 
-                if (actionValue === "delete") {
-                    deleteIcon.style.display = "block";
-                } else {
-                    deleteIcon.style.display = "none";
-                }
-
                 if (actionValue === "edit") {
-                    if (isResign) {
-                        name.contentEditable = "false";
-                        role.contentEditable = "false";
-                        status.contentEditable = "false";
-                        status.style.backgroundColor = "";
-                    } else {
+                    if (!isResign) {
                         name.contentEditable = "true";
                         role.contentEditable = "true";
+                        shift.contentEditable = "true";
                         status.contentEditable = "true";
                         status.style.backgroundColor = "yellow";
+                        shift.style.backgroundColor = "yellow";
                     }
                 } else {
                     name.contentEditable = "false";
                     role.contentEditable = "false";
+                    shift.contentEditable = "false";
                     status.contentEditable = "false";
                     status.style.backgroundColor = "";
+                    shift.style.backgroundColor = "";
                 }
+
+                deleteIcon.style.display = actionValue === "delete" ? "block" : "none";
             });
 
             if (actionValue === "add") {
-                addNewEmployees();
+                openEmployeeForm();
+            } else {
+                closeEmployeeForm();
             }
         }
 
-        function addNewEmployees() {
-            let employeeList = document.getElementById("employeeList");
+        function openEmployeeForm() {
+            document.getElementById("employeeModal").style.display = "block";
+        }
 
-            for (let i = 0; i < 3; i++) {
+        function closeEmployeeForm() {
+            document.getElementById("employeeModal").style.display = "none";
+        }
+
+        function addNewEmployees() {
+            let jumlah = parseInt(document.getElementById("jumlahInput").value);
+            if (isNaN(jumlah) || jumlah <= 0) {
+                alert("Jumlah tidak valid.");
+                return;
+            }
+
+            let employeeList = document.getElementById("employeeList");
+            for (let i = 0; i < jumlah; i++) {
                 let newCard = document.createElement("div");
                 newCard.className = "employee-card new";
 
@@ -137,17 +161,17 @@
                     <div class="status-box status-active" contenteditable="true">ACTIVE</div>
                     <div class="shift-box" contenteditable="true">SHIFT</div>
                 `;
-
                 employeeList.appendChild(newCard);
 
-                let fileInput = newCard.querySelector(".file-input");
-                let previewImg = newCard.querySelector(".employee-photo-preview");
-                let plusIcon = newCard.querySelector(".plus-icon");
+                const fileInput = newCard.querySelector(".file-input");
+                const previewImg = newCard.querySelector(".employee-photo-preview");
+                const plusIcon = newCard.querySelector(".plus-icon");
 
-                fileInput.addEventListener("change", function () {
+                plusIcon.addEventListener("click", () => fileInput.click());
+                fileInput.addEventListener("change", () => {
                     if (fileInput.files && fileInput.files[0]) {
                         const reader = new FileReader();
-                        reader.onload = function (e) {
+                        reader.onload = e => {
                             previewImg.src = e.target.result;
                             previewImg.style.display = "block";
                             plusIcon.style.display = "none";
@@ -156,73 +180,86 @@
                     }
                 });
             }
+
+            closeEmployeeForm();
         }
 
         function submitData() {
+            document.activeElement.blur();
             let formData = new FormData();
 
-            // ADD
-            let newCards = document.querySelectorAll(".employee-card.new");
-            newCards.forEach(card => {
-                let name = card.querySelector(".employee-name").innerText.trim();
-                let role = card.querySelector(".employee-role").innerText.trim();
-                let status = card.querySelector(".status-box").innerText.trim().toLowerCase();
-                let shift = card.querySelector(".shift-box").innerText.trim();
+            // Tambah
+            document.querySelectorAll(".employee-card.new").forEach(card => {
+                formData.append("new_names[]", card.querySelector(".employee-name").innerText.trim());
+                formData.append("new_roles[]", card.querySelector(".employee-role").innerText.trim());
+                formData.append("new_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
+                formData.append("new_shifts[]", card.querySelector(".shift-box").innerText.trim());
 
-                formData.append("new_names[]", name);
-                formData.append("new_roles[]", role);
-                formData.append("new_statuses[]", status);
-                formData.append("new_shifts[]", shift);
-
-                let fileInput = card.querySelector(".file-input");
-                formData.append("new_photos[]", fileInput && fileInput.files[0] ? fileInput.files[0] : '');
+                const fileInput = card.querySelector(".file-input");
+                formData.append("new_photos[]", fileInput.files[0] ?? '');
             });
 
-            // EDIT
-            let editedCards = document.querySelectorAll(".employee-card:not(.new)");
-            editedCards.forEach(card => {
-                let id = card.getAttribute("data-id");
-                let name = card.querySelector(".employee-name").innerText.trim();
-                let role = card.querySelector(".employee-role").innerText.trim();
-                let status = card.querySelector(".status-box").innerText.trim().toLowerCase();
-                let shift = card.querySelector(".shift-box").innerText.trim();
-
-                formData.append("edit_ids[]", id);
-                formData.append("edit_names[]", name);
-                formData.append("edit_roles[]", role);
-                formData.append("edit_statuses[]", status);
-                formData.append("edit_shifts[]", shift);
+            // Edit
+            document.querySelectorAll(".employee-card:not(.new)").forEach(card => {
+                const id = card.getAttribute("data-id");
+                if (id) {
+                    formData.append("edit_ids[]", id);
+                    formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
+                    formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
+                    formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
+                    formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim());
+                }
             });
 
-            // DELETE
-            deletedIds.forEach(id => {
-                formData.append("deleted_ids[]", id);
-            });
+            // Hapus
+            deletedIds.forEach(id => formData.append("deleted_ids[]", id));
 
             fetch("{{ route('data_py.saveAll') }}", {
                 method: "POST",
-                headers: {
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
+                headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
                 body: formData
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 alert("Data berhasil disimpan!");
                 location.reload();
             })
-            .catch(error => {
-                console.error("Gagal menyimpan data:", error);
-                alert("Terjadi kesalahan saat menyimpan data.");
+            .catch(err => {
+                console.error(err);
+                alert("Gagal menyimpan data!");
             });
         }
 
-        // Event listener
-        document.querySelectorAll('input[name="action"]').forEach(radio => {
-            radio.addEventListener("change", applyAction);
-        });
+        document.querySelectorAll('input[name="action"]').forEach(radio =>
+            radio.addEventListener("change", applyAction)
+        );
 
         document.getElementById("doneButton").addEventListener("click", submitData);
+
+        document.getElementById("cancelButton").addEventListener("click", () => {
+            document.querySelectorAll('input[name="action"]').forEach(r => r.checked = false);
+            document.querySelectorAll(".employee-card.new").forEach(card => card.remove());
+
+            document.querySelectorAll(".employee-card").forEach(card => {
+                let name = card.querySelector(".employee-name");
+                let role = card.querySelector(".employee-role");
+                let status = card.querySelector(".status-box");
+                let shift = card.querySelector(".shift-box");
+                let deleteIcon = card.querySelector(".delete-icon");
+
+                name.contentEditable = "false";
+                role.contentEditable = "false";
+                status.contentEditable = "false";
+                shift.contentEditable = "false";
+                status.style.backgroundColor = "";
+                shift.style.backgroundColor = "";
+
+                if (deleteIcon) deleteIcon.style.display = "none";
+            });
+
+            deletedIds = [];
+            closeEmployeeForm();
+        });
     </script>
 </body>
 </html>

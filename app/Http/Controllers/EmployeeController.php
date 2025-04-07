@@ -88,11 +88,13 @@ class EmployeeController extends Controller
             foreach ($request->edit_ids as $index => $id) {
                 $employee = Employee::find($id);
                 if ($employee) {
-                    $employee->name = $request->edit_names[$index];
-                    $employee->role = $request->edit_roles[$index];
-                    $employee->status = $request->edit_statuses[$index];
-                    $employee->shift = $request->edit_shifts[$index];
-                    $employee->save();
+                    $employee->update([
+                        $employee->name = $request->edit_names[$index],
+                        $employee->role = $request->edit_roles[$index],
+                        $employee->status = $request->edit_statuses[$index],
+                        $employee->shift = $request->edit_shifts[$index],
+                        $employee->save()
+                    ]);
                 }
             }
             $message[] = "Perubahan data berhasil disimpan.";
@@ -101,11 +103,13 @@ class EmployeeController extends Controller
         // DELETE
         if ($request->has('deleted_ids')) {
             $deletedIds = $request->input('deleted_ids');
-            Employee::whereIn('id', $deletedIds)->delete();
+            Employee::whereIn('id', $request->deleted_ids)->delete();
             $message[] = count($deletedIds) . " data pegawai berhasil dihapus.";
         }
 
         return response()->json(['success' => true]);
     }
+
+    
 
 }
