@@ -98,8 +98,14 @@ Route::get('/data_py', function () {
 
 Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
 Route::post('/data_py/delete', [EmployeeController::class, 'delete'])->name('data_py.delete');
-Route::post('/data_py/edit', [EmployeeController::class, 'edit'])->name('data_py.edit');
-Route::post('/data-pegawai/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
+Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+
+// Route::get('/pegawai', [EmployeeController::class, 'index']);  // Menampilkan semua pegawai
+// Route::post('/pegawai', [EmployeeController::class, 'store']); // Menyimpan pegawai baru
+// Route::get('/pegawai/{id}', [EmployeeController::class, 'show']);  // Menampilkan detail pegawai
+// Route::put('/pegawai/{id}', [EmployeeController::class, 'update']);  // Mengupdate pegawai
+// Route::delete('/pegawai/{id}', [EmployeeController::class, 'destroy']);
 
 //pegawai
 Route::get('/pegawai/login', function () {

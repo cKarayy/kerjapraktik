@@ -33,26 +33,45 @@
     </div>
 
     <div class="container">
-        <div class="employee-list" id="employeeList">
-            @foreach($employees as $employee)
-            <div class="employee-card {{ $employee['status'] === 'resign' ? 'resign' : 'active' }}" data-id="{{ $employee['id'] }}">
-                <div class="upload-container">
-                    <img class="employee-photo" src="{{ asset($employee['photo'] ?? 'images/logo.png') }}" alt="Foto Pegawai">
+        <form method="POST" action="{{ route('data_py.edit') }}" id="editForm">
+            @csrf
+            <div class="employee-list" id="employeeList">
+                @foreach($employees as $employee)
+                <div class="employee-card {{ $employee['status'] === 'resign' ? 'resign' : 'active' }}" data-id="{{ $employee['id'] }}">
+                    <input type="hidden" name="edit_ids[]" value="{{ $employee['id'] }}">
+
+                    <div class="upload-container">
+                        <img class="employee-photo" src="{{ asset($employee['photo'] ?? 'images/logo.png') }}" alt="Foto Pegawai">
+                    </div>
+                    <div class="employee-info">
+                        <h2 class="employee-name">{{ strtoupper($employee['name']) }}</h2>
+                        <p class="employee-role">{{ $employee['role'] }}</p>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="status-box {{ $employee['status'] === 'active' ? 'status-active' : 'status-resign' }}">
+                        {{ strtoupper($employee['status']) }}
+                    </div>
+                    <select class="edit-status" name="edit_statuses[]" style="display: none;">
+                        <option value="active" {{ $employee['status'] == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="resign" {{ $employee['status'] == 'resign' ? 'selected' : '' }}>Resign</option>
+                    </select>
+
+                    <!-- Shift -->
+                    <div class="shift-box">
+                        {{ strtoupper($employee['shift'] ?? '-') }}
+                    </div>
+                    <select class="edit-shift" name="edit_shifts[]" style="display: none;">
+                        <option value="pagi" {{ $employee['shift'] == 'pagi' ? 'selected' : '' }}>Pagi</option>
+                        <option value="middle" {{ $employee['shift'] == 'middle' ? 'selected' : '' }}>Middle</option>
+                        <option value="malam" {{ $employee['shift'] == 'malam' ? 'selected' : '' }}>Malam</option>
+                    </select>
+
+                    <i class="fa-solid fa-trash delete-icon" style="display: none;" onclick="deleteEmployee(this)"></i>
                 </div>
-                <div class="employee-info">
-                    <h2 class="employee-name">{{ strtoupper($employee['name']) }}</h2>
-                    <p class="employee-role">{{ $employee['role'] }}</p>
-                </div>
-                <div class="status-box {{ $employee['status'] === 'active' ? 'status-active' : 'status-resign' }}">
-                    {{ strtoupper($employee['status']) }}
-                </div>
-                <div class="shift-box">
-                    {{ strtoupper($employee['shift'] ?? '-') }}
-                </div>
-                <i class="fa-solid fa-trash delete-icon" style="display: none;" onclick="deleteEmployee(this)"></i>
+                @endforeach
             </div>
-            @endforeach
-        </div>
+        </form>
     </div>
 
     <!-- popup add -->
@@ -98,18 +117,36 @@
                 let shift = card.querySelector(".shift-box");
                 let deleteIcon = card.querySelector(".delete-icon");
 
+                // Define editStatus and editShift
+                let editStatus = card.querySelector(".edit-status"); // assuming .edit-status is your element for status
+                let editShift = card.querySelector(".edit-shift"); // assuming .edit-shift is your element for shift
+
                 let isResign = status.innerText.trim().toLowerCase() === "resign";
 
                 if (actionValue === "edit") {
                     if (!isResign) {
-                        name.contentEditable = "true";
-                        role.contentEditable = "true";
-                        shift.contentEditable = "true";
-                        status.contentEditable = "true";
-                        status.style.backgroundColor = "yellow";
-                        shift.style.backgroundColor = "yellow";
+                        // Tampilkan select untuk status dan shift
+                        editStatus.style.display = "inline-block";
+                        editShift.style.display = "inline-block";
+                        status.style.display = "none";
+                        shift.style.display = "none";
                     }
+                    name.contentEditable = "true";
+                    role.contentEditable = "true";
+                    status.contentEditable = "true";
+                    shift.contentEditable = "true";
+                    status.style.backgroundColor = "yellow";
+                    shift.style.backgroundColor = "yellow";
+
+                    document.querySelectorAll('.edit-status, .edit-shift').forEach(el => el.style.display = 'inline-block');
+                    document.querySelectorAll('.status-box, .shift-box').forEach(el => el.style.display = 'none');
                 } else {
+                    // Sembunyikan select untuk status dan shift, tampilkan status dan shift biasa
+                    if (editStatus) editStatus.style.display = "none";
+                    if (editShift) editShift.style.display = "none";
+                    status.style.display = "inline-block";
+                    shift.style.display = "inline-block";
+
                     name.contentEditable = "false";
                     role.contentEditable = "false";
                     shift.contentEditable = "false";
