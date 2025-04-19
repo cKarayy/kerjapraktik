@@ -71,7 +71,7 @@ Route::get('/dashboard_py', function () {
 Route::get('/data_py', function () {
     $employees = Employee::all()->map(function ($employee, $index) {
         return [
-            'id' => $index + 1,
+            'id' => $employee->id,
             'name' => $employee->name,
             'role' => $employee->role,
             'status' => $employee->status,
@@ -97,7 +97,7 @@ Route::get('/data_py', function () {
 // })->name('data_py.add');
 
 Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
-Route::post('/data_py/delete', [EmployeeController::class, 'delete'])->name('data_py.delete');
+Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
 Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
 Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
 

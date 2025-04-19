@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Employee;
+// use Laravel\Pail\ValueObjects\Origin\Console;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
@@ -47,47 +49,48 @@ class EmployeeController extends Controller
 
     public function update(Request $request)
     {
- // Ambil data yang dikirim dari frontend
- $ids = $request->input('ids');
- $names = $request->input('names');
- $roles = $request->input('roles');
- $statuses = $request->input('statuses');
- $shifts = $request->input('shifts');
+        // Ambil data yang dikirim dari frontend
+        $ids = $request->input('ids');
+        $names = $request->input('names');
+        $roles = $request->input('roles');
+        $statuses = $request->input('statuses');
+        $shifts = $request->input('shifts');
 
- $failedUpdates = [];  // Menyimpan error jika ada
+        $failedUpdates = [];  // Menyimpan error jika ada
 
- // Loop untuk memproses setiap data pegawai yang ingin diperbarui
- for ($i = 0; $i < count($ids); $i++) {
-     $employee = Employee::find($ids[$i]);
+        // Loop untuk memproses setiap data pegawai yang ingin diperbarui
+        for ($i = 0; $i < count($ids); $i++) {
+            $employee = Employee::find($ids[$i]);
 
-     if ($employee) {
-         // Update data karyawan
-         $employee->name = $names[$i];
-         $employee->role = $roles[$i];
-         $employee->status = $statuses[$i];
-         $employee->shift = $shifts[$i];
-         $employee->save();
-     } else {
-         // Kirimkan log ke konsol browser jika karyawan tidak ditemukan
-         echo "<script>console.log('Employee with ID {$ids[$i]} not found.');</script>";
+            if ($employee) {
+                // Update data karyawan
+                $employee->name = $names[$i];
+                $employee->role = $roles[$i];
+                $employee->status = $statuses[$i];
+                $employee->shift = $shifts[$i];
+                $employee->save();
+            } else {
+                // Kirimkan log ke konsol browser jika karyawan tidak ditemukan
+                echo "<script>console.log('Employee with ID {$ids[$i]} not found.');</script>";
 
-         // Simpan error untuk respons JSON
-         $failedUpdates[] = "Employee with ID {$ids[$i]} not found.";
-     }
- }
+                // Simpan error untuk respons JSON
+                $failedUpdates[] = "Employee with ID {$ids[$i]} not found.";
+            }
+        }
 
- // Jika ada data gagal diperbarui, kirimkan respons error
- if (!empty($failedUpdates)) {
-     return response()->json(['status' => 'error', 'message' => $failedUpdates], 400);
- }
+        // Jika ada data gagal diperbarui, kirimkan respons error
+        if (!empty($failedUpdates)) {
+            return response()->json(['status' => 'error', 'message' => $failedUpdates], 400);
+        }
 
- // Jika berhasil, kirimkan respons sukses
- return response()->json(['status' => 'success', 'message' => 'Data updated successfully!']);
+        // Jika berhasil, kirimkan respons sukses
+        return response()->json(['status' => 'success', 'message' => 'Data updated successfully!']);
     }
 
 
     public function saveAll(Request $request)
     {
+        Log::info('Request masuk:', $request->all());
         $message = [];
 
         // ADD
@@ -111,16 +114,36 @@ class EmployeeController extends Controller
 
         // EDIT
         if ($request->has('edit_ids')) {
+            Log::info('Mulai proses edit data karyawan', ['edit_ids' => $request->edit_ids]);
             foreach ($request->edit_ids as $index => $id) {
                 $employee = Employee::find($id);
+                Log::info('R');
+                Log::info($id);
+
+
                 if ($employee) {
+                    Log::info('B');
+                    Log::info("Edit employee ID: $id", [
+                        'before' => $employee->toArray(),
+                        'input' => [
+                            'name' => $request->edit_names[$index] ?? null,
+                            'role' => $request->edit_roles[$index] ?? null,
+                            'status' => $request->edit_statuses[$index] ?? null,
+                            'shift' => $request->edit_shifts[$index] ?? null,
+                        ]
+                    ]);
+
+
                     $employee->name = $request->edit_names[$index] ?? $employee->name;
                     $employee->role = $request->edit_roles[$index] ?? $employee->role;
                     $employee->status = $request->edit_statuses[$index] ?? $employee->status;
                     $employee->shift = $request->edit_shifts[$index] ?? $employee->shift;
                     $employee->save();
+
+                    Log::info("Data karyawan setelah diupdate", ['after' => $employee->toArray()]);
                 }
             }
+
 
             $message[] = "Data pegawai berhasil diubah.";
         }
@@ -137,7 +160,7 @@ class EmployeeController extends Controller
             $message[] = "Data pegawai berhasil dihapus.";
         }
 
-        return response()->json(['success' => true, 'message' => $message]);
+        return response()->json($request->all());
     }
 
 }

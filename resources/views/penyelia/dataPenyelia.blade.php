@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Kepegawaian Perwakilan Owner</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" href="{{ asset('css/admin/data.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
@@ -38,7 +39,7 @@
             <div class="employee-list" id="employeeList">
                 @foreach($employees as $employee)
                 <div class="employee-card {{ $employee['status'] === 'resign' ? 'resign' : 'active' }}" data-id="{{ $employee['id'] }}">
-                    <input type="hidden" name="edit_ids[]" value="{{ $employee['id'] }}">
+
 
                     <div class="upload-container">
                         <img class="employee-photo" src="{{ asset($employee['photo'] ?? 'images/logo.png') }}" alt="Foto Pegawai">
@@ -96,6 +97,7 @@
             if (id) {
                 deletedIds.push(id);
                 card.remove();
+                console.log(deletedIds);
             }
         }
 
@@ -225,6 +227,10 @@
             document.activeElement.blur();
             let formData = new FormData();
 
+            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append("_token", token);
+
+            console.log("Data yang akan dikirim:");
             // Tambah
             document.querySelectorAll(".employee-card.new").forEach(card => {
                 formData.append("new_names[]", card.querySelector(".employee-name").innerText.trim());
@@ -236,17 +242,35 @@
                 formData.append("new_photos[]", fileInput.files[0] ?? '');
             });
 
-            // Edit
-            document.querySelectorAll(".employee-card:not(.new)").forEach(card => {
-                const id = card.getAttribute("data-id");
-                if (id) {
-                    formData.append("edit_ids[]", id);
-                    formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
-                    formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
-                    formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
-                    formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim());
-                }
-            });
+            document.querySelectorAll(".employee-card:not(.new)").forEach((card, index) => {
+    const id = card.getAttribute("data-id");
+    console.log(`Card ${index} has data-id: ${id}`);
+    if (id) {
+        formData.append("edit_ids[]", id);
+        formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
+        formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
+
+        const editStatus = card.querySelector(".edit-status");
+        const editShift = card.querySelector(".edit-shift");
+
+        if (editStatus && window.getComputedStyle(editStatus).display !== "none") {
+            formData.append("edit_statuses[]", editStatus.value);
+        } else {
+            formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
+        }
+
+        if (editShift && window.getComputedStyle(editShift).display !== "none") {
+            formData.append("edit_shifts[]", editShift.value);
+        } else {
+            formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim().toLowerCase());
+        }
+    }
+});
+
+console.log("Data yang akan dikirim ke server:");
+for (let pair of formData.entries()) {
+    console.log(pair[0] + ': ' + pair[1]);
+}
 
             // Hapus
             deletedIds.forEach(id => formData.append("deleted_ids[]", id));
@@ -258,7 +282,7 @@
             })
             .then(res => res.json())
             .then(data => {
-                alert("Data berhasil disimpan!");
+                alert('data berhasil disimpan');
                 location.reload();
             })
             .catch(err => {
