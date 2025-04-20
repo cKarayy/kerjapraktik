@@ -38,24 +38,28 @@ Route::get('/login', function () {
     return redirect()->route('admin.login');
 })->name('login');
 
-// Route::get('/qrcode', function () {
-//     return view('admin.qr');
-// })->name('qrcode');
+Route::get('/qrcode', function () {
+    return view('admin.qr');
+})->name('qrcode');
 
-Route::get('/generate-qr', [QRController::class, 'generate'])->name('qrcode');
+//Route::get('/generate-qr', [QRController::class, 'generate'])->name('qrcode');
 Route::post('/scan-qr', [QRController::class, 'scanQR'])->name('scan.qr');
+
+Route::get('/generate-qr/{shift}', [QRController::class, 'generate'])->name('generate.qr.shift');
 
 Route::get('/admin/laporan', [LaporanKehadiranController::class, 'getReport'])->name('admin.laporan');
 
 Route::get('/data_admin', function () {
-    $employees = array_map(function ($i) {
+    $employees = Employee::all()->map(function ($employee) {
         return [
-            'id' => $i + 1,
-            'name' => $i === 22 ? 'Putri Tapasya' : 'Sony Palton',
-            'role' => $i === 22 ? 'Food Runner' : 'Perwakilan Owner',
-            'status' => $i === 22 ? 'resign' : 'active',
+            'id' => $employee->id,
+            'name' => $employee->name,
+            'role' => $employee->role,
+            'status' => $employee->status,
+            'shift' => $employee->shift ?? null,
+            'photo' => $employee->photo ?? null,
         ];
-    }, range(0, 22));
+    });
 
     return view('admin.datapegawai', compact('employees'));
 })->name('data_admin');
@@ -83,29 +87,10 @@ Route::get('/data_py', function () {
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
 
-// Route::post('/data_py/add', function (Illuminate\Http\Request $request) {
-//     foreach ($request->employees as $data) {
-//         Employee::create([
-//             'name' => $data['name'],
-//             'role' => $data['role'],
-//             'status' => $data['status'],
-//             'shift' => $data['shift'],
-//         ]);
-//     }
-
-//     return redirect()->route('data_py')->with('success', 'Pegawai berhasil ditambahkan!');
-// })->name('data_py.add');
-
 Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
 Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
 Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
 Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
-
-// Route::get('/pegawai', [EmployeeController::class, 'index']);  // Menampilkan semua pegawai
-// Route::post('/pegawai', [EmployeeController::class, 'store']); // Menyimpan pegawai baru
-// Route::get('/pegawai/{id}', [EmployeeController::class, 'show']);  // Menampilkan detail pegawai
-// Route::put('/pegawai/{id}', [EmployeeController::class, 'update']);  // Mengupdate pegawai
-// Route::delete('/pegawai/{id}', [EmployeeController::class, 'destroy']);
 
 //pegawai
 Route::get('/pegawai/login', function () {

@@ -163,4 +163,19 @@ class EmployeeController extends Controller
         return response()->json($request->all());
     }
 
+    // Controller untuk halaman admin dan penyelia
+    public function showPegawai()
+    {
+        $employees = Employee::all(); // atau pakai where tertentu jika perlu filter
+
+        return view('admin.data', compact('employees'));
+    }
+
+    public function showPegawaiPenyelia()
+    {
+        $employees = Employee::all(); // HARUS sama supaya datanya sinkron
+
+        return view('penyelia.data', compact('employees'));
+    }
+
 }

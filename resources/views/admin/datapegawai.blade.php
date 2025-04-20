@@ -18,7 +18,7 @@
         <div class="employee-list" id="employeeList">
             @foreach($employees as $employee)
                 <div class="employee-card {{ $employee['status'] === 'resign' ? 'resign' : 'active' }}">
-                    <img src="{{ asset('images/logo.png') }}" alt="employee-photo" class="employee-photo">
+                    <img src="{{ asset($employee['photo'] ?? 'images/logo.png') }}" alt="employee-photo" class="employee-photo">
 
                     <div class="employee-info">
                         <h2 class="employee-name">{{ strtoupper($employee['name']) }}</h2>
@@ -28,10 +28,15 @@
                     <div class="status-box {{ $employee['status'] === 'active' ? 'status-active' : 'status-resign' }}">
                         {{ strtoupper($employee['status']) }}
                     </div>
+
+                    <div class="shift-box">
+                        {{ strtoupper($employee['shift'] ?? '-') }}
+                    </div>
                 </div>
             @endforeach
         </div>
     </div>
+
 
 </body>
 </html>
