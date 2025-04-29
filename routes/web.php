@@ -93,6 +93,10 @@ Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 
 Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
 
 //pegawai
+Route::get('/pegawai/register', function () {
+    return view('pegawai.registerPg');
+})->name('pegawai.register');
+
 Route::get('/pegawai/login', function () {
     return view('pegawai.loginPg');
 })->name('pegawai.login');
