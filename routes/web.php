@@ -6,19 +6,13 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QRController;
 use App\Http\Controllers\LaporanKehadiranController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ShiftController;
 use App\Models\Employee;
 
 //admin
 Route::get('/', function () {
     return view('admin.welcome');
 });
-
-// Route::get('/admin/register', [AdminController::class, 'showRegister'])->name('admin.register');
-// Route::post('/admin/register', [AdminController::class, 'registerAdmin'])->name('admin.register.submit');
-
-// Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login');
-// Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login');
-// Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
 Route::get('/admin/register', [AdminController::class, 'showRegister'])->name('admin.register');
 Route::post('/admin/register', [AdminController::class, 'registerAdmin'])->name('admin.register.submit');
@@ -52,11 +46,11 @@ Route::get('/admin/laporan', [LaporanKehadiranController::class, 'getReport'])->
 Route::get('/data_admin', function () {
     $employees = Employee::all()->map(function ($employee) {
         return [
-            'id' => $employee->id,
-            'name' => $employee->name,
-            'role' => $employee->role,
+            'id' => $employee->id_karyawan,
+            'name' => $employee->nama_lengkap,
+            'role' => $employee->jabatan,
             'status' => $employee->status,
-            'shift' => $employee->shift ?? null,
+            'shift' => $employee->shift->nama_shift ?? '-',
             'photo' => $employee->photo ?? null,
         ];
     });
@@ -67,30 +61,37 @@ Route::get('/data_admin', function () {
 Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('employees.index');
 Route::post('/admin/employees/store', [EmployeeController::class, 'store'])->name('employees.store');
 
+
 //Penyelia
 Route::get('/dashboard_py', function () {
     return view('penyelia.db');
 })->name('dashboard_py');
 
 Route::get('/data_py', function () {
-    $employees = Employee::all()->map(function ($employee, $index) {
+    $employees = Employee::with('shift')->get()->map(function ($employee) {
         return [
-            'id' => $employee->id,
-            'name' => $employee->name,
-            'role' => $employee->role,
+            'id' => $employee->id_karyawan,
+            'name' => $employee->nama_lengkap,
+            'role' => $employee->jabatan,
             'status' => $employee->status,
-            'shift' => $employee->shift,
-            'photo' => $employee->photo, // jika perlu tampilkan foto
+            'shift' => $employee->shift->nama_shift ?? '-',
+            'photo' => $employee->photo ?? null,
         ];
     });
 
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
 
+
 Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
 Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
 Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
 Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+
+Route::get('/shifts/all', [ShiftController::class, 'getAll']);
+Route::post('/shifts/tambah', [ShiftController::class, 'store']);
+Route::post('/shifts/update-multiple', [ShiftController::class, 'updateMultiple']);
+Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple']);
 
 //pegawai
 Route::get('/pegawai/register', function () {

@@ -16,7 +16,7 @@
         <h1>LOGIN</h1>
         <div class="line"></div>
 
-        <form action="{{ route('admin.login') }}" method="POST">
+        <form action="{{ route('admin.login.submit') }}" method="POST">
             @csrf
             <label for="full_name">Nama Lengkap</label>
             <input type="text" id="full_name" name="full_name" required>
@@ -32,6 +32,13 @@
 
             <button type="submit" class="login-btn">LOGIN</button>
         </form>
+
+        <p style="margin-top: 20px; text-align: center;">
+            Belum punya akun?
+            <a href="{{ route('admin.register') }}" style="text-decoration: underline; color: #007bff;">
+                Signup
+            </a>
+        </p>
 
         @if(session('error'))
             <div style="color: red;">{{ session('error') }}</div>

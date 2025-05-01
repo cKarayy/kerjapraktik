@@ -33,6 +33,15 @@
         <button class="btn-cancel" id="cancelButton">CANCEL</button>
     </div>
 
+    <div id="targetOptions" style="display: none; margin-top: 10px;">
+        <label>
+            <input type="radio" name="target" value="pegawai"> Pegawai
+        </label>
+        <label>
+            <input type="radio" name="target" value="shift"> Shift
+        </label>
+    </div>
+
     <div class="container">
         <form method="POST" action="{{ route('data_py.edit') }}" id="editForm">
             @csrf
@@ -40,10 +49,6 @@
                 @foreach($employees as $employee)
                 <div class="employee-card {{ $employee['status'] === 'resign' ? 'resign' : 'active' }}" data-id="{{ $employee['id'] }}">
 
-
-                    <div class="upload-container">
-                        <img class="employee-photo" src="{{ asset($employee['photo'] ?? 'images/logo.png') }}" alt="Foto Pegawai">
-                    </div>
                     <div class="employee-info">
                         <h2 class="employee-name">{{ strtoupper($employee['name']) }}</h2>
                         <p class="employee-role">{{ $employee['role'] }}</p>
@@ -87,6 +92,8 @@
         </div>
     </div>
 
+    <div id="shiftFormContainer" style="display: none; margin-top: 20px;"></div>
+
 
     <script>
         let deletedIds = [];
@@ -111,17 +118,35 @@
             let actionValue = selectedAction.value;
             let employeeCards = document.querySelectorAll(".employee-card");
 
+            document.getElementById("targetOptions").style.display = "block";
+
+            document.querySelectorAll('input[name="target"]').forEach(input => {
+                input.addEventListener("change", function () {
+                    if (this.value === 'pegawai') {
+                        document.querySelector(".container").style.display = "block";
+                        document.getElementById("shiftFormContainer").style.display = "none";
+                        if (selectedAction.value === "add") {
+                            openEmployeeForm();
+                        }
+                    } else {
+                        document.querySelector(".container").style.display = "none";
+                        document.getElementById("employeeModal").style.display = "none";
+                        generateShiftForm(selectedAction.value);
+                    }
+                });
+            });
+
             // Reset semua kartu
             employeeCards.forEach(card => {
-                let name = card.querySelector(".employee-name");
-                let role = card.querySelector(".employee-role");
+                let fullName = card.querySelector(".employee-name");
+                let jobTitle = card.querySelector(".employee-role");
                 let status = card.querySelector(".status-box");
                 let shift = card.querySelector(".shift-box");
                 let deleteIcon = card.querySelector(".delete-icon");
 
                 // Define editStatus and editShift
-                let editStatus = card.querySelector(".edit-status"); // assuming .edit-status is your element for status
-                let editShift = card.querySelector(".edit-shift"); // assuming .edit-shift is your element for shift
+                let editStatus = card.querySelector(".edit-status");
+                let editShift = card.querySelector(".edit-shift");
 
                 let isResign = status.innerText.trim().toLowerCase() === "resign";
 
@@ -133,8 +158,8 @@
                         status.style.display = "none";
                         shift.style.display = "none";
                     }
-                    name.contentEditable = "true";
-                    role.contentEditable = "true";
+                    fullName.contentEditable = "true";
+                    jobTitle.contentEditable = "true";
                     status.contentEditable = "true";
                     shift.contentEditable = "true";
                     status.style.backgroundColor = "yellow";
@@ -149,8 +174,8 @@
                     status.style.display = "inline-block";
                     shift.style.display = "inline-block";
 
-                    name.contentEditable = "false";
-                    role.contentEditable = "false";
+                    fullName.contentEditable = "false";
+                    jobTitle.contentEditable = "false";
                     shift.contentEditable = "false";
                     status.contentEditable = "false";
                     status.style.backgroundColor = "";
@@ -166,6 +191,37 @@
                 closeEmployeeForm();
             }
         }
+
+        function generateShiftForm(action) {
+            const container = document.getElementById("shiftFormContainer");
+            container.style.display = "block";
+
+            if (action === "add") {
+                container.innerHTML = `
+                    <h3>Tambah Shift</h3>
+                    <input type="text" id="namaShift" placeholder="Nama Shift"><br>
+                    <input type="time" id="jamMasuk"><br>
+                    <input type="time" id="jamKeluar"><br>
+                `;
+            } else if (action === "edit" || action === "delete") {
+                fetch("/shifts/all")
+                    .then(res => res.json())
+                    .then(shifts => {
+                        let html = `<h3>${action === "edit" ? "Edit" : "Hapus"} Shift</h3>`;
+                        shifts.forEach(shift => {
+                            html += `
+                                <div class="shift-item" data-id="${shift.id_shift}">
+                                    <input type="text" class="nama" value="${shift.nama_shift}" ${action === 'delete' ? 'readonly' : ''}>
+                                    <input type="time" class="masuk" value="${shift.jam_masuk}" ${action === 'delete' ? 'readonly' : ''}>
+                                    <input type="time" class="keluar" value="${shift.jam_keluar}" ${action === 'delete' ? 'readonly' : ''}>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    });
+            }
+        }
+
 
         function openEmployeeForm() {
             document.getElementById("employeeModal").style.display = "block";
@@ -194,7 +250,7 @@
                         <img class="employee-photo employee-photo-preview" src="#" alt="Preview" style="display:none;">
                     </div>
                     <div class="employee-info">
-                        <h2 class="employee-name" contenteditable="true">Nama</h2>
+                        <h2 class="employee-name" contenteditable="true">Nama Lengkap</h2>
                         <p class="employee-role" contenteditable="true">Jabatan</p>
                     </div>
                     <div class="status-box status-active" contenteditable="true">ACTIVE</div>
@@ -226,6 +282,8 @@
         function submitData() {
             document.activeElement.blur();
             let formData = new FormData();
+            const target = document.querySelector('input[name="target"]:checked')?.value;
+            const action = document.querySelector('input[name="action"]:checked')?.value;
 
             const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
             formData.append("_token", token);
@@ -243,34 +301,34 @@
             });
 
             document.querySelectorAll(".employee-card:not(.new)").forEach((card, index) => {
-    const id = card.getAttribute("data-id");
-    console.log(`Card ${index} has data-id: ${id}`);
-    if (id) {
-        formData.append("edit_ids[]", id);
-        formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
-        formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
+                const id = card.getAttribute("data-id");
+                console.log(`Card ${index} has data-id: ${id}`);
+                if (id) {
+                    formData.append("edit_ids[]", id);
+                    formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
+                    formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
 
-        const editStatus = card.querySelector(".edit-status");
-        const editShift = card.querySelector(".edit-shift");
+                    const editStatus = card.querySelector(".edit-status");
+                    const editShift = card.querySelector(".edit-shift");
 
-        if (editStatus && window.getComputedStyle(editStatus).display !== "none") {
-            formData.append("edit_statuses[]", editStatus.value);
-        } else {
-            formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
-        }
+                    if (editStatus && window.getComputedStyle(editStatus).display !== "none") {
+                        formData.append("edit_statuses[]", editStatus.value);
+                    } else {
+                        formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
+                    }
 
-        if (editShift && window.getComputedStyle(editShift).display !== "none") {
-            formData.append("edit_shifts[]", editShift.value);
-        } else {
-            formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim().toLowerCase());
-        }
-    }
-});
+                    if (editShift && window.getComputedStyle(editShift).display !== "none") {
+                        formData.append("edit_shifts[]", editShift.value);
+                    } else {
+                        formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim().toLowerCase());
+                    }
+                }
+            });
 
-console.log("Data yang akan dikirim ke server:");
-for (let pair of formData.entries()) {
-    console.log(pair[0] + ': ' + pair[1]);
-}
+            console.log("Data yang akan dikirim ke server:");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
 
             // Hapus
             deletedIds.forEach(id => formData.append("deleted_ids[]", id));
@@ -302,14 +360,14 @@ for (let pair of formData.entries()) {
             document.querySelectorAll(".employee-card.new").forEach(card => card.remove());
 
             document.querySelectorAll(".employee-card").forEach(card => {
-                let name = card.querySelector(".employee-name");
-                let role = card.querySelector(".employee-role");
+                let fullName = card.querySelector(".employee-name");
+                let jobTitle = card.querySelector(".employee-role");
                 let status = card.querySelector(".status-box");
                 let shift = card.querySelector(".shift-box");
                 let deleteIcon = card.querySelector(".delete-icon");
 
-                name.contentEditable = "false";
-                role.contentEditable = "false";
+                fullName.contentEditable = "false";
+                jobTitle.contentEditable = "false";
                 status.contentEditable = "false";
                 shift.contentEditable = "false";
                 status.style.backgroundColor = "";
@@ -322,5 +380,6 @@ for (let pair of formData.entries()) {
             closeEmployeeForm();
         });
     </script>
+
 </body>
 </html>

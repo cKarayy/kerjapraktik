@@ -6,5 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class QR extends Model
 {
-    protected $fillable = ['code', 'valid_until', 'is_used'];
+    protected $table = 'qr_codes';
+    protected $primaryKey = 'id_code';
+    protected $fillable = ['id_admin', 'kode', 'waktu_generate', 'kehadiran'];
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class, 'id_admin');
+    }
 }

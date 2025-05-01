@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('absensis', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pegawai_id')->constrained('users'); // Sesuaikan dengan tabel pegawai
-            $table->string('qr_code');
-            $table->timestamp('scan_time');
+        Schema::create('admins', function (Blueprint $table) {
+            $table->id('id_admin');
+            $table->string('nama_lengkap');
+            $table->string('password_admin');
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('absensis');
+        Schema::dropIfExists('admins');
     }
 };

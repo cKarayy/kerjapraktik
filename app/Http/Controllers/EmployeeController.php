@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers;
 
-
 use Illuminate\Http\Request;
 use App\Models\Employee;
-// use Laravel\Pail\ValueObjects\Origin\Console;
 use Illuminate\Support\Facades\Log;
 
 class EmployeeController extends Controller
 {
-
     public function index()
     {
         $employees = Employee::all();
@@ -21,18 +18,18 @@ class EmployeeController extends Controller
     {
         $photos = $request->file('photo');
 
-        foreach ($request->name as $i => $name) {
+        foreach ($request->nama_lengkap as $i => $nama_lengkap) {
             $photoPath = null;
             if (isset($photos[$i])) {
                 $photoPath = $photos[$i]->store('employees', 'public');
             }
 
             Employee::create([
-                'name' => $name,
-                'role' => $request->role[$i],
-                'shift' => $request->shift[$i],
+                'nama_lengkap' => $nama_lengkap,
+                'jabatan' => $request->jabatan[$i],
+                'id_shift' => $request->id_shift[$i],
                 'status' => $request->status[$i],
-                'photo' => $photoPath,
+                'id_penyelia' => $request->id_penyelia[$i] ?? null,  // Jika ada penyelia
             ]);
         }
 
@@ -51,10 +48,11 @@ class EmployeeController extends Controller
     {
         // Ambil data yang dikirim dari frontend
         $ids = $request->input('ids');
-        $names = $request->input('names');
-        $roles = $request->input('roles');
-        $statuses = $request->input('statuses');
-        $shifts = $request->input('shifts');
+        $nama_lengkap = $request->input('nama_lengkap');
+        $jabatan = $request->input('jabatan');
+        $status = $request->input('status');
+        $id_shift = $request->input('id_shift');
+        $id_penyelia = $request->input('id_penyelia');
 
         $failedUpdates = [];  // Menyimpan error jika ada
 
@@ -64,10 +62,11 @@ class EmployeeController extends Controller
 
             if ($employee) {
                 // Update data karyawan
-                $employee->name = $names[$i];
-                $employee->role = $roles[$i];
-                $employee->status = $statuses[$i];
-                $employee->shift = $shifts[$i];
+                $employee->nama_lengkap = $nama_lengkap[$i];
+                $employee->jabatan = $jabatan[$i];
+                $employee->status = $status[$i];
+                $employee->id_shift = $id_shift[$i];
+                $employee->id_penyelia = $id_penyelia[$i] ?? null;
                 $employee->save();
             } else {
                 // Kirimkan log ke konsol browser jika karyawan tidak ditemukan
@@ -87,24 +86,20 @@ class EmployeeController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Data updated successfully!']);
     }
 
-
     public function saveAll(Request $request)
     {
         Log::info('Request masuk:', $request->all());
         $message = [];
 
         // ADD
-        if ($request->has('new_names')) {
-            foreach ($request->new_names as $index => $name) {
+        if ($request->has('new_nama_lengkap')) {
+            foreach ($request->new_nama_lengkap as $index => $nama_lengkap) {
                 $employee = new Employee();
-                $employee->name = $name;
-                $employee->role = $request->new_roles[$index] ?? '';
-                $employee->status = $request->new_statuses[$index] ?? 'active';
-                $employee->shift = $request->new_shifts[$index] ?? '';
-
-                if ($request->hasFile("new_photos.$index")) {
-                    $employee->photo = $request->file("new_photos.$index")->store('employees', 'public');
-                }
+                $employee->nama_lengkap = $nama_lengkap;
+                $employee->jabatan = $request->new_jabatan[$index] ?? '';
+                $employee->status = $request->new_status[$index] ?? 'active';
+                $employee->id_shift = $request->new_id_shift[$index] ?? '';
+                $employee->id_penyelia = $request->new_id_penyelia[$index] ?? null;
 
                 $employee->save();
             }
@@ -117,33 +112,27 @@ class EmployeeController extends Controller
             Log::info('Mulai proses edit data karyawan', ['edit_ids' => $request->edit_ids]);
             foreach ($request->edit_ids as $index => $id) {
                 $employee = Employee::find($id);
-                Log::info('R');
-                Log::info($id);
-
 
                 if ($employee) {
-                    Log::info('B');
                     Log::info("Edit employee ID: $id", [
                         'before' => $employee->toArray(),
                         'input' => [
-                            'name' => $request->edit_names[$index] ?? null,
-                            'role' => $request->edit_roles[$index] ?? null,
-                            'status' => $request->edit_statuses[$index] ?? null,
-                            'shift' => $request->edit_shifts[$index] ?? null,
+                            'nama_lengkap' => $request->edit_nama_lengkap[$index] ?? null,
+                            'jabatan' => $request->edit_jabatan[$index] ?? null,
+                            'status' => $request->edit_status[$index] ?? null,
+                            'id_shift' => $request->edit_id_shift[$index] ?? null,
+                            'id_penyelia' => $request->edit_id_penyelia[$index] ?? null,
                         ]
                     ]);
 
-
-                    $employee->name = $request->edit_names[$index] ?? $employee->name;
-                    $employee->role = $request->edit_roles[$index] ?? $employee->role;
-                    $employee->status = $request->edit_statuses[$index] ?? $employee->status;
-                    $employee->shift = $request->edit_shifts[$index] ?? $employee->shift;
+                    $employee->nama_lengkap = $request->edit_nama_lengkap[$index] ?? $employee->nama_lengkap;
+                    $employee->jabatan = $request->edit_jabatan[$index] ?? $employee->jabatan;
+                    $employee->status = $request->edit_status[$index] ?? $employee->status;
+                    $employee->id_shift = $request->edit_id_shift[$index] ?? $employee->id_shift;
+                    $employee->id_penyelia = $request->edit_id_penyelia[$index] ?? $employee->id_penyelia;
                     $employee->save();
-
-                    Log::info("Data karyawan setelah diupdate", ['after' => $employee->toArray()]);
                 }
             }
-
 
             $message[] = "Data pegawai berhasil diubah.";
         }
@@ -163,7 +152,6 @@ class EmployeeController extends Controller
         return response()->json($request->all());
     }
 
-    // Controller untuk halaman admin dan penyelia
     public function showPegawai()
     {
         $employees = Employee::all(); // atau pakai where tertentu jika perlu filter
@@ -177,5 +165,4 @@ class EmployeeController extends Controller
 
         return view('penyelia.data', compact('employees'));
     }
-
 }

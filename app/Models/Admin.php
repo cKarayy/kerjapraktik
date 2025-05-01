@@ -9,7 +9,14 @@ class Admin extends Authenticatable
 {
     use HasFactory;
 
-    protected $fillable = ['full_name', 'password','role'];
+    protected $primaryKey = 'id_admin';
+
+     protected $fillable = ['nama_lengkap', 'password_admin'];
 
     protected $hidden = ['password'];
+
+    public function getAuthPassword()
+    {
+        return $this->password_admin;
+    }
 }

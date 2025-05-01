@@ -45,6 +45,11 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+
+        'penyelia' => [
+            'driver' => 'session',
+            'provider' => 'penyelias',
+        ],
     ],
 
 
@@ -71,9 +76,17 @@ return [
             'model' => App\Models\User::class, // Pastikan model User ada
         ],
 
-        'admins' => [
+        'admin' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class, // Model untuk admin
+        ],
+        'penyelias' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Penyelia::class,
+        ],
+        'karyawans' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Employee::class,
         ],
     ],
 
