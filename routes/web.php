@@ -7,6 +7,7 @@ use App\Http\Controllers\QRController;
 use App\Http\Controllers\LaporanKehadiranController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\UserController;
 use App\Models\Employee;
 
 //admin
@@ -93,14 +94,22 @@ Route::post('/shifts/tambah', [ShiftController::class, 'store']);
 Route::post('/shifts/update-multiple', [ShiftController::class, 'updateMultiple']);
 Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple']);
 
-//pegawai
-Route::get('/pegawai/register', function () {
-    return view('pegawai.registerPg');
-})->name('pegawai.register');
+//pegawai 
+Route::get('/pegawai/registerPg', [UserController::class, 'showRegister'])->name('pegawai.registerPg');
+Route::post('/pegawai/registerPg', [UserController::class, 'registerPegawai'])->name('pegawai.registerPg.submit');
 
-Route::get('/pegawai/login', function () {
-    return view('pegawai.loginPg');
-})->name('pegawai.login');
+Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.login');
+Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
+
+Route::post('/admin/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+
+// Route::get('/pegawai/register', function () {
+//     return view('pegawai.registerPg');
+// })->name('pegawai.register');
+
+// Route::get('/pegawai/login', function () {
+//     return view('pegawai.loginPg');
+// })->name('pegawai.login');
 
 Route::get('/pegawai/home', action: function () {
     return view('pegawai.home');
