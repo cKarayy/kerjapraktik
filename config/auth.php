@@ -43,7 +43,7 @@ return [
 
         'admin' => [
             'driver' => 'session',
-            'provider' => 'admins',
+            'provider' => 'admin',
         ],
 
         'penyelia' => [
@@ -81,9 +81,9 @@ return [
             'model' => App\Models\User::class, // Pastikan model User ada
         ],
 
-        'admin' => [
+        'admin' => [ // <-- ini singular: 'admin'
             'driver' => 'eloquent',
-            'model' => App\Models\Admin::class, // Model untuk admin
+            'model' => App\Models\Admin::class,
         ],
 
         'penyelias' => [
