@@ -13,7 +13,7 @@ class LoginUserController extends Controller
 {
     public function showLoginForm()
     {
-        return view('pegawai.login'); // Ubah jika view login-nya gabungan
+        return view('pegawai.loginPg');
     }
 
     public function login(Request $request)
@@ -41,17 +41,28 @@ class LoginUserController extends Controller
         $pegawai = Employee::where('nama_lengkap', $request->full_name)->first();
         if ($pegawai && Hash::check($request->password, $pegawai->password)) {
             Auth::guard('karyawans')->login($pegawai);
-            return redirect()->route('pegawai.home');
+
+            // Mengirim data pegawai ke view menggunakan with()
+            return redirect()->route('pegawai.home')->with('pegawai', $pegawai);
         }
 
         return redirect()->back()->with('error', 'Nama lengkap atau password salah.');
     }
 
+    public function home()
+    {
+        // Ambil data pegawai yang login
+        $pegawai = auth()->guard('karyawans')->user();  // Mengambil data user yang login
 
-    // Logout
+        // Kirimkan data pegawai ke view
+        return view('pegawai.home', compact('pegawai'));
+    }
     public function logout(Request $request)
     {
+        Auth::guard('karyawans')->logout();
         session()->flush();
-        return redirect()->route('pegawai.login');
+
+        return redirect()->route('pegawai.loginPg');
     }
+
 }

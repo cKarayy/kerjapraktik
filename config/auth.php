@@ -50,6 +50,11 @@ return [
             'driver' => 'session',
             'provider' => 'penyelias',
         ],
+
+        'karyawans' => [
+            'driver' => 'session',
+            'provider' => 'karyawans',
+        ],
     ],
 
 
@@ -80,10 +85,12 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class, // Model untuk admin
         ],
+
         'penyelias' => [
             'driver' => 'eloquent',
             'model' => App\Models\Penyelia::class,
         ],
+
         'karyawans' => [
             'driver' => 'eloquent',
             'model' => App\Models\Employee::class,

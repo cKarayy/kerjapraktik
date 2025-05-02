@@ -33,13 +33,14 @@
         <button class="btn-cancel" id="cancelButton">CANCEL</button>
     </div>
 
-    <div id="targetOptions" style="display: none; margin-top: 10px;">
-        <label>
-            <input type="radio" name="target" value="pegawai"> Pegawai
-        </label>
-        <label>
-            <input type="radio" name="target" value="shift"> Shift
-        </label>
+    <div id="chooseTargetModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Pilih Jenis Data:</h3>
+            <div class="button-group">
+                <button onclick="handleTargetChoice('pegawai')">Pegawai</button>
+                <button onclick="handleTargetChoice('shift')">Shift</button>
+            </div>
+        </div>
     </div>
 
     <div class="container">
@@ -92,8 +93,19 @@
         </div>
     </div>
 
-    <div id="shiftFormContainer" style="display: none; margin-top: 20px;"></div>
+    <!-- Tambah Shift -->
+    <div id="shiftModal" class="modal">
+        <div class="modal-content">
+            <h2>Tambah Shift</h2>
+            <input type="number" id="jumlahShiftInput" min="1" placeholder="Masukkan jumlah shift">
+            <div class="button-group">
+                <button class="done-btn" onclick="generateShiftCards()">DONE</button>
+                <button class="cancel-btn" onclick="cancelShiftAction()">CANCEL</button>
+            </div>
+        </div>
+    </div>
 
+    <div id="shiftFormContainer" style="display: none; margin-top: 20px;"></div>
 
     <script>
         let deletedIds = [];
@@ -116,104 +128,198 @@
             }
 
             let actionValue = selectedAction.value;
-            let employeeCards = document.querySelectorAll(".employee-card");
+            window.selectedActionValue = selectedAction.value;
 
-            document.getElementById("targetOptions").style.display = "block";
+            // Show target selection dialog
+            document.getElementById("chooseTargetModal").style.display = "flex";
 
             document.querySelectorAll('input[name="target"]').forEach(input => {
                 input.addEventListener("change", function () {
-                    if (this.value === 'pegawai') {
-                        document.querySelector(".container").style.display = "block";
-                        document.getElementById("shiftFormContainer").style.display = "none";
-                        if (selectedAction.value === "add") {
-                            openEmployeeForm();
-                        }
+                    const isShift = this.value === 'shift';
+
+                    document.querySelector(".container").style.display = isShift ? "none" : "block";
+                    document.getElementById("employeeModal").style.display = "none";
+                    document.getElementById("shiftFormContainer").style.display = isShift ? "block" : "none";
+
+                    if (isShift) {
+                        closeEmployeeForm();
+                        generateShiftForm(actionValue);
                     } else {
-                        document.querySelector(".container").style.display = "none";
-                        document.getElementById("employeeModal").style.display = "none";
-                        generateShiftForm(selectedAction.value);
+                        if (actionValue === "add") {
+                            openEmployeeForm();
+                        } else {
+                            closeEmployeeForm();
+                        }
                     }
                 });
             });
+        }
 
-            // Reset semua kartu
-            employeeCards.forEach(card => {
-                let fullName = card.querySelector(".employee-name");
-                let jobTitle = card.querySelector(".employee-role");
-                let status = card.querySelector(".status-box");
-                let shift = card.querySelector(".shift-box");
-                let deleteIcon = card.querySelector(".delete-icon");
+        function handleTargetChoice(target) {
+            const isShift = target === 'shift';
+            const actionValue = window.selectedActionValue;
 
-                // Define editStatus and editShift
-                let editStatus = card.querySelector(".edit-status");
-                let editShift = card.querySelector(".edit-shift");
+            // Menutup modal pilih target
+            document.getElementById("chooseTargetModal").style.display = "none";
+            document.querySelector(".container").style.display = isShift ? "none" : "block";
+            document.getElementById("shiftFormContainer").style.display = isShift ? "block" : "none";
 
-                let isResign = status.innerText.trim().toLowerCase() === "resign";
-
-                if (actionValue === "edit") {
-                    if (!isResign) {
-                        // Tampilkan select untuk status dan shift
-                        editStatus.style.display = "inline-block";
-                        editShift.style.display = "inline-block";
-                        status.style.display = "none";
-                        shift.style.display = "none";
-                    }
-                    fullName.contentEditable = "true";
-                    jobTitle.contentEditable = "true";
-                    status.contentEditable = "true";
-                    shift.contentEditable = "true";
-                    status.style.backgroundColor = "yellow";
-                    shift.style.backgroundColor = "yellow";
-
-                    document.querySelectorAll('.edit-status, .edit-shift').forEach(el => el.style.display = 'inline-block');
-                    document.querySelectorAll('.status-box, .shift-box').forEach(el => el.style.display = 'none');
-                } else {
-                    // Sembunyikan select untuk status dan shift, tampilkan status dan shift biasa
-                    if (editStatus) editStatus.style.display = "none";
-                    if (editShift) editShift.style.display = "none";
-                    status.style.display = "inline-block";
-                    shift.style.display = "inline-block";
-
-                    fullName.contentEditable = "false";
-                    jobTitle.contentEditable = "false";
-                    shift.contentEditable = "false";
-                    status.contentEditable = "false";
-                    status.style.backgroundColor = "";
-                    shift.style.backgroundColor = "";
-                }
-
-                deleteIcon.style.display = actionValue === "delete" ? "block" : "none";
-            });
-
-            if (actionValue === "add") {
-                openEmployeeForm();
-            } else {
+            if (isShift) {
                 closeEmployeeForm();
+
+                // Tampilkan modal untuk meminta jumlah shift
+                document.getElementById("shiftModal").style.display = "block";
+
+                // Tombol DONE untuk memasukkan jumlah shift
+                document.querySelector("#shiftModal .done-btn").onclick = () => {
+                    const jumlah = parseInt(document.getElementById("jumlahShiftInput").value);
+                    if (isNaN(jumlah) || jumlah <= 0) {
+                        alert("Jumlah shift tidak valid.");
+                        return;
+                    }
+
+                    // Tutup modal dan tampilkan shift card
+                    document.getElementById("shiftModal").style.display = "none";
+                    generateShiftForm("add", jumlah);
+                };
+
+                document.querySelector("#shiftModal .cancel-btn").onclick = () => {
+                    // Reset semua kembali ke halaman awal
+                    document.getElementById("shiftModal").style.display = "none";
+                    document.getElementById("shiftFormContainer").innerHTML = "";
+                    document.getElementById("shiftFormContainer").style.display = "none";
+                    document.querySelectorAll('input[name="action"]').forEach(r => r.checked = false);
+                    document.getElementById("chooseTargetModal").style.display = "none";
+                };
+
+
+            } else {
+                if (actionValue === "add") {
+                    openEmployeeForm();
+                } else {
+                    closeEmployeeForm();
+                }
+                updateEmployeeCardUI(actionValue);
             }
         }
 
-        function generateShiftForm(action) {
+        function generateShiftForm(action, jumlahShift) {
             const container = document.getElementById("shiftFormContainer");
-            container.style.display = "block";
+            container.innerHTML = "";
+            container.style.display = "grid";
+            container.className = "shift-container"; // agar grid layout diterapkan
+
+            // Validasi jumlah shift
+            if (isNaN(jumlahShift) || jumlahShift <= 0) {
+                alert("Jumlah shift tidak valid.");
+                return;
+            }
 
             if (action === "add") {
-                container.innerHTML = `
-                    <h3>Tambah Shift</h3>
-                    <input type="text" id="namaShift" placeholder="Nama Shift"><br>
-                    <input type="time" id="jamMasuk"><br>
-                    <input type="time" id="jamKeluar"><br>
-                `;
-            } else if (action === "edit" || action === "delete") {
+                for (let i = 0; i < jumlahShift; i++) {
+                    const card = document.createElement("div");
+                    card.className = "employee-card shift-card new";
+
+                    card.innerHTML = `
+                        <div class="employee-info">
+                            <h2 class="employee-name" contenteditable="true">Nama Shift</h2>
+                            <p class="employee-role">
+                                <input type="time" class="jam-masuk"> -
+                                <input type="time" class="jam-keluar">
+                            </p>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                }
+
+                // Tombol CANCEL dan DONE
+                const buttonWrapper = document.createElement("div");
+                buttonWrapper.style.gridColumn = "1 / -1";
+                buttonWrapper.style.display = "flex";
+                buttonWrapper.style.justifyContent = "center";
+                buttonWrapper.style.gap = "20px";
+                buttonWrapper.style.marginTop = "20px";
+
+                const cancelButton = document.createElement("button");
+                cancelButton.textContent = "CANCEL";
+                cancelButton.className = "btn-cancel";
+                cancelButton.onclick = () => {
+                    document.getElementById("jumlahShiftInput").value = ""; // Reset input jumlah shift
+                    document.getElementById("shiftModal").style.display = "none"; // Tutup modal
+                    container.innerHTML = ""; // Hapus semua shift cards yang sudah dibuat
+                };
+
+                const doneButton = document.createElement("button");
+                doneButton.textContent = "DONE";
+                doneButton.className = "btn-done";
+                doneButton.onclick = () => {
+                    const shifts = [];
+                    container.querySelectorAll(".shift-card").forEach(card => {
+                        const nama = card.querySelector(".employee-name").innerText.trim();
+                        const jamMasuk = card.querySelector(".jam-masuk").value;
+                        const jamKeluar = card.querySelector(".jam-keluar").value;
+                        if (nama && jamMasuk && jamKeluar) {
+                            shifts.push({
+                                nama_shift: nama,
+                                jam_masuk: jamMasuk,
+                                jam_keluar: jamKeluar
+                            });
+                        }
+                    });
+
+                    if (shifts.length === 0) {
+                        alert("Data shift tidak lengkap.");
+                        return;
+                    }
+
+                    // Kirim ke backend Laravel
+                    fetch("/shifts/store-multiple", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                        },
+                        body: JSON.stringify({ shifts })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error("Gagal menyimpan shift.");
+                        return res.json();
+                    })
+                    .then(response => {
+                        alert("Data shift berhasil disimpan.");
+                        document.getElementById("shiftModal").style.display = "none"; // Tutup modal setelah sukses
+                        container.innerHTML = ""; // Hapus shift form
+                    })
+                    .catch(error => {
+                        console.error(error);
+                        alert("Terjadi kesalahan saat menyimpan shift.");
+                    });
+                };
+
+                buttonWrapper.appendChild(cancelButton);
+                buttonWrapper.appendChild(doneButton);
+                container.appendChild(buttonWrapper);
+            } else {
+                // Load data dari backend
                 fetch("/shifts/all")
                     .then(res => res.json())
                     .then(shifts => {
-                        let html = `<h3>${action === "edit" ? "Edit" : "Hapus"} Shift</h3>`;
+                        let html = "";
                         shifts.forEach(shift => {
                             html += `
-                                <div class="shift-item" data-id="${shift.id_shift}">
-                                    <input type="text" class="nama" value="${shift.nama_shift}" ${action === 'delete' ? 'readonly' : ''}>
-                                    <input type="time" class="masuk" value="${shift.jam_masuk}" ${action === 'delete' ? 'readonly' : ''}>
-                                    <input type="time" class="keluar" value="${shift.jam_keluar}" ${action === 'delete' ? 'readonly' : ''}>
+                                <div class="employee-card shift-card" data-id="${shift.id_shift}">
+                                    <div class="employee-info">
+                                        <h2 class="employee-name" contenteditable="${action === 'edit'}">${shift.nama_shift}</h2>
+                                        <p class="employee-role">
+                                            <input type="time" class="jam-masuk" value="${shift.jam_masuk}" ${action === 'delete' ? 'readonly' : ''}>
+                                            -
+                                            <input type="time" class="jam-keluar" value="${shift.jam_keluar}" ${action === 'delete' ? 'readonly' : ''}>
+                                        </p>
+                                    </div>
+                                    <div class="status-box ${action === 'delete' ? 'status-resign' : 'status-active'}">
+                                        ${action.toUpperCase()}
+                                    </div>
                                 </div>
                             `;
                         });
@@ -221,7 +327,6 @@
                     });
             }
         }
-
 
         function openEmployeeForm() {
             document.getElementById("employeeModal").style.display = "block";
@@ -279,85 +384,27 @@
             closeEmployeeForm();
         }
 
-        function submitData() {
-            document.activeElement.blur();
-            let formData = new FormData();
-            const target = document.querySelector('input[name="target"]:checked')?.value;
-            const action = document.querySelector('input[name="action"]:checked')?.value;
-
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            formData.append("_token", token);
-
-            console.log("Data yang akan dikirim:");
-            // Tambah
-            document.querySelectorAll(".employee-card.new").forEach(card => {
-                formData.append("new_names[]", card.querySelector(".employee-name").innerText.trim());
-                formData.append("new_roles[]", card.querySelector(".employee-role").innerText.trim());
-                formData.append("new_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
-                formData.append("new_shifts[]", card.querySelector(".shift-box").innerText.trim());
-
-                const fileInput = card.querySelector(".file-input");
-                formData.append("new_photos[]", fileInput.files[0] ?? '');
-            });
-
-            document.querySelectorAll(".employee-card:not(.new)").forEach((card, index) => {
-                const id = card.getAttribute("data-id");
-                console.log(`Card ${index} has data-id: ${id}`);
-                if (id) {
-                    formData.append("edit_ids[]", id);
-                    formData.append("edit_names[]", card.querySelector(".employee-name").innerText.trim());
-                    formData.append("edit_roles[]", card.querySelector(".employee-role").innerText.trim());
-
-                    const editStatus = card.querySelector(".edit-status");
-                    const editShift = card.querySelector(".edit-shift");
-
-                    if (editStatus && window.getComputedStyle(editStatus).display !== "none") {
-                        formData.append("edit_statuses[]", editStatus.value);
-                    } else {
-                        formData.append("edit_statuses[]", card.querySelector(".status-box").innerText.trim().toLowerCase());
-                    }
-
-                    if (editShift && window.getComputedStyle(editShift).display !== "none") {
-                        formData.append("edit_shifts[]", editShift.value);
-                    } else {
-                        formData.append("edit_shifts[]", card.querySelector(".shift-box").innerText.trim().toLowerCase());
-                    }
-                }
-            });
-
-            console.log("Data yang akan dikirim ke server:");
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            // Hapus
-            deletedIds.forEach(id => formData.append("deleted_ids[]", id));
-
-            fetch("{{ route('data_py.saveAll') }}", {
-                method: "POST",
-                headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert('data berhasil disimpan');
-                location.reload();
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Gagal menyimpan data!");
-            });
-        }
-
+        // Aktifkan applyAction saat radio ADD/EDIT/DELETE dipilih
         document.querySelectorAll('input[name="action"]').forEach(radio =>
             radio.addEventListener("change", applyAction)
         );
 
+        // Tombol DONE
         document.getElementById("doneButton").addEventListener("click", submitData);
 
+        // Tombol CANCEL
         document.getElementById("cancelButton").addEventListener("click", () => {
             document.querySelectorAll('input[name="action"]').forEach(r => r.checked = false);
+            document.querySelectorAll('input[name="target"]').forEach(r => r.checked = false);
+
+            // Hapus shift card baru & sembunyikan container
+            document.getElementById("shiftFormContainer").innerHTML = "";
+            document.getElementById("shiftFormContainer").style.display = "none";
+
+
             document.querySelectorAll(".employee-card.new").forEach(card => card.remove());
+            document.getElementById("targetOptions").style.display = "none";
+            document.getElementById("shiftFormContainer").style.display = "none";
 
             document.querySelectorAll(".employee-card").forEach(card => {
                 let fullName = card.querySelector(".employee-name");
@@ -380,6 +427,5 @@
             closeEmployeeForm();
         });
     </script>
-
 </body>
 </html>

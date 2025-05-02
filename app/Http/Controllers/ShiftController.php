@@ -33,4 +33,25 @@ class ShiftController extends Controller
         return response()->json(['message' => 'Shift dihapus']);
     }
 
+    public function storeMultiple(Request $request)
+    {
+        $data = $request->validate([
+            'shifts' => 'required|array',
+            'shifts.*.nama_shift' => 'required|string|max:255',
+            'shifts.*.jam_masuk' => 'required',
+            'shifts.*.jam_keluar' => 'required',
+        ]);
+
+        foreach ($data['shifts'] as $shift) {
+            shifts::create([
+                'nama_shift' => $shift['nama_shift'],
+                'jam_masuk' => $shift['jam_masuk'],
+                'jam_keluar' => $shift['jam_keluar'],
+            ]);
+        }
+
+        return response()->json(['message' => 'Shifts berhasil disimpan.']);
+    }
+
+
 }

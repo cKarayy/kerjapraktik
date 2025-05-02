@@ -17,19 +17,20 @@
     </div>
 
     <div class="greeting">
-        <h2>Hai <span id="nama-pegawai">[Nama Pegawai]</span>.</h2>
+        <h2>Hai <span id="nama-pegawai">{{ $pegawai->nama_lengkap }}</span>.</h2>
         <p>Semangat Bekerja!</p>
     </div>
+
 
     <div class="container">
         <button id="btn-hadir" class="btn hadir" onclick="scanQR()">HADIR</button>
         <button id="btn-izin" class="btn izin" onclick="openPopup('popup-izin')">IZIN</button>
         <button id="btn-cuti" class="btn cuti" onclick="openPopup('popup-cuti')">CUTI</button>
-        <button class="btn logout" >LOGOUT</button>
+        <button class="btn logout"  type="submit" onclick="document.getElementById('logout-form').submit()">LOGOUT</button>
 
-        {{-- <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+        <form id="logout-form" action="{{ route('pegawai.logout') }}" method="POST" style="display: none;">
             @csrf
-        </form> --}}
+        </form>
     </div>
 
     <!-- Popup Izin -->
@@ -78,11 +79,6 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            let namaPegawai = localStorage.getItem("namaPegawai") || "[Nama Pegawai]";
-            document.getElementById("nama-pegawai").innerText = namaPegawai;
-        });
-
         function changeColor(id) {
             let tombol = document.getElementById(id);
 

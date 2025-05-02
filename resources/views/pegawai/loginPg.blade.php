@@ -17,11 +17,11 @@
             <h1>LOGIN</h1>
             <div class="line"></div>
 
-            <form action="{{ route('pegawai.login') }}" method="POST">
+            <form action="{{ route('pegawai.login.submit') }}" method="POST">
                 @csrf
                 <div class="input-container">
-                    <label class="label-text" for="nama">Nama Lengkap</label>
-                    <input type="text" id="nama" name="nama">
+                    <label class="label-text" for="full_name">Nama Lengkap</label>
+                    <input type="text" id="full_name" name="full_name">
                 </div>
 
                 <div class="input-container">
@@ -33,7 +33,14 @@
                 </div>
 
                 <button class="login-btn">LOGIN</button>
-                </form>
+            </form>
+
+            <p style="margin-top: 5px; text-align: center;">
+                Belum punya akun?
+                <a href="{{ route('pegawai.registerPg') }}" style="text-decoration: underline; color: #007bff;">
+                    Signup
+                </a>
+            </p>
         </div>
     </div>
 

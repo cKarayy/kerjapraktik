@@ -396,8 +396,7 @@ body {
     display: none;
     position: fixed;
     z-index: 999;
-    padding-top: 100px;
-    left: 0; top: 0;
+    left: 0;
     width: 100%; height: 100%;
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
@@ -409,6 +408,7 @@ body {
     padding: 20px;
     border-radius: 10px;
     width: 300px;
+    margin-top: 250px;
     text-align: center;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     font-family: 'Segoe UI', sans-serif;
@@ -455,4 +455,53 @@ body {
 .cancel-btn {
     background-color: #333;
     color: white;
+}
+
+/* Container Grid */
+.shift-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    overflow-y: auto;
+    padding: 0 100px 20px 100px;
+    height: 100px;
+}
+
+
+/* Kartu Shift */
+.employee-card.shift-card {
+    background-color: indigo;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Konten shift */
+.shift-card .employee-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shift-card .employee-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.shift-card .employee-role {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.shift-card .employee-role input {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 100px;
 }

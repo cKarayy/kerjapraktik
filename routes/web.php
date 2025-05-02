@@ -8,7 +8,10 @@ use App\Http\Controllers\LaporanKehadiranController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\LoginUserController;
 use App\Models\Employee;
+use Symfony\Component\Mailer\Test\Constraint\EmailCount;
+
 
 //admin
 Route::get('/', function () {
@@ -94,26 +97,25 @@ Route::post('/shifts/tambah', [ShiftController::class, 'store']);
 Route::post('/shifts/update-multiple', [ShiftController::class, 'updateMultiple']);
 Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple']);
 
-//pegawai 
-Route::get('/pegawai/registerPg', [UserController::class, 'showRegister'])->name('pegawai.registerPg');
-Route::post('/pegawai/registerPg', [UserController::class, 'registerPegawai'])->name('pegawai.registerPg.submit');
+Route::post('/shifts/store-multiple', [ShiftController::class, 'storeMultiple']);
 
-Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.login');
+
+//pegawai
+Route::get('/pegawai/login', function () {
+    return view('pegawai.loginPg');
+})->name('pegawai.loginPg');
+
+Route::get('/register-karyawan', [EmployeeController::class, 'create'])->name('karyawans.create');
+Route::post('/register-karyawan', action: [EmployeeController::class, 'store'])->name('karyawans.store');
+
+Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->name('pegawai.registerPg');
+
+Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
 Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
 
-Route::post('/admin/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
 
-// Route::get('/pegawai/register', function () {
-//     return view('pegawai.registerPg');
-// })->name('pegawai.register');
-
-// Route::get('/pegawai/login', function () {
-//     return view('pegawai.loginPg');
-// })->name('pegawai.login');
-
-Route::get('/pegawai/home', action: function () {
-    return view('pegawai.home');
-})->name('pegawai.home');
+Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 
 Route::get('/pegawai/history', action: function () {
     return view('pegawai.history');
