@@ -99,6 +99,10 @@ Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple'
 
 Route::post('/shifts/store-multiple', [ShiftController::class, 'storeMultiple']);
 
+//pegawai
+Route::get('/pegawai/register', function () {
+    return view('pegawai.registerPg');
+})->name('pegawai.register');
 
 //pegawai
 Route::get('/pegawai/login', function () {
