@@ -55,7 +55,6 @@ Route::get('/data_admin', function () {
             'role' => $employee->jabatan,
             'status' => $employee->status,
             'shift' => $employee->shift->nama_shift ?? '-',
-            'photo' => $employee->photo ?? null,
         ];
     });
 
@@ -79,17 +78,14 @@ Route::get('/data_py', function () {
             'role' => $employee->jabatan,
             'status' => $employee->status,
             'shift' => $employee->shift->nama_shift ?? '-',
-            'photo' => $employee->photo ?? null,
         ];
     });
 
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
 
-
-Route::post('/data_py/add', [EmployeeController::class, 'add'])->name('data_py.add');
 Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
-Route::post('/data_py/edit', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
+Route::post('/data_py/edit/{id}', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
 Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
 
 Route::get('/shifts/all', [ShiftController::class, 'getAll']);
@@ -117,9 +113,9 @@ Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->na
 Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
 Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
 
+Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
 
-Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 
 Route::get('/pegawai/history', action: function () {
     return view('pegawai.history');

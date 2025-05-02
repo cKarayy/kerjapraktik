@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_admin');
             $table->string('kode');
             $table->dateTime('waktu_generate');
-            $table->string('kehadiran');
+            $table->string('kehadiran')->default('belum hadir');;
             $table->timestamps();
 
             $table->foreign('id_admin')->references('id_admin')->on('admins')->onDelete('cascade');

@@ -75,24 +75,27 @@ body {
 
 .employee-list {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); /* Gunakan lebar kartu baru */
+    gap: 20px;
     overflow-y: auto;
     padding-bottom: 20px;
-    height: calc(100vh - 150px);
+    height: 230px
 }
 
 .employee-card {
-    margin: 0 0 8px 0; /* Hapus margin atas & samping */
-    padding: 10px;
+    padding: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: nowrap;
     background-color: indigo;
     border-radius: 10px;
     color: white;
+    width: 250px;
+    height: 40px;
+    font-size: 12px;
 }
+
 
 .status-dropdown {
     background: yellow;
@@ -148,6 +151,7 @@ body {
     text-transform: uppercase;
     margin: 0;
     white-space: nowrap;
+    margin-left: 10px;
 }
 
 .employee-role {
@@ -155,6 +159,7 @@ body {
     color: white;
     margin: 0;
     text-transform: uppercase;
+    margin-left: 10px;
 }
 
 .status-box {
@@ -463,7 +468,8 @@ body {
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     overflow-y: auto;
-    padding: 0 100px 20px 100px;
+    padding: 0 100px 10px 100px;
+    align-items: center;
     height: 100px;
 }
 
@@ -490,7 +496,7 @@ body {
 .shift-card .employee-name {
     font-size: 20px;
     font-weight: bold;
-    margin: 0;
+    align-items: flex-start;
 }
 
 .shift-card .employee-role {
