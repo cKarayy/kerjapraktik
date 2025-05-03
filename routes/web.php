@@ -9,6 +9,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginUserController;
+use App\Http\Controllers\CutiController;
+use App\Http\Controllers\IzinController;
 use App\Models\Employee;
 use Symfony\Component\Mailer\Test\Constraint\EmailCount;
 
@@ -84,16 +86,31 @@ Route::get('/data_py', function () {
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
 
-Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
-Route::post('/data_py/edit/{id}', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
-Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+// Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
+// Route::post('/data_py/edit/{id}', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
+// Route::post('/data-py/save-all', [EmployeeController::class, 'saveAll'])->name('data_py.saveAll');
+// Route::get('/data_py/edit/{id}', [EmployeeController::class, 'edit'])->name('data_py.edit');
+// Route::put('/data_py/update/{id}', [EmployeeController::class, 'update'])->name('data_py.update');
 
-Route::get('/shifts/all', [ShiftController::class, 'getAll']);
-Route::post('/shifts/tambah', [ShiftController::class, 'store']);
-Route::post('/shifts/update-multiple', [ShiftController::class, 'updateMultiple']);
-Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple']);
+// Route::get('/shifts/all', [ShiftController::class, 'getAll']);
+// Route::post('/shifts/tambah', [ShiftController::class, 'store']);
+// Route::post('/shifts/update-multiple', [ShiftController::class, 'updateMultiple']);
+// Route::post('/shifts/delete-multiple', [ShiftController::class, 'deleteMultiple']);
 
-Route::post('/shifts/store-multiple', [ShiftController::class, 'storeMultiple']);
+// Route::post('/shifts/store-multiple', [ShiftController::class, 'storeMultiple']);
+
+Route::prefix('pegawai')->group(function () {
+    Route::get('/all', [EmployeeController::class, 'index']); // Menampilkan semua pegawai
+    Route::put('/update/{id}', [EmployeeController::class, 'update']); // Mengupdate data pegawai
+    Route::post('/update/{id}', [EmployeeController::class, 'update']); // Mengupdate data pegawai
+    Route::delete('/delete/{id}', [EmployeeController::class, 'delete']); // Menghapus banyak pegawai
+});
+
+Route::prefix('shifts')->group(function () {
+    Route::get('/all', [ShiftController::class, 'index']); // Menampilkan semua shift
+    Route::put('/update/{id}', [ShiftController::class, 'update']); // Mengupdate data shift
+    Route::post('/delete-multiple', [ShiftController::class, 'delete']); // Menghapus banyak shift
+});
 
 //pegawai
 Route::get('/pegawai/register', function () {
@@ -121,3 +138,14 @@ Route::get('/pegawai/history', action: function () {
     return view('pegawai.history');
 })->name('pegawai.history');
 
+Route::get('/pegawai/all', [EmployeeController::class, 'show'])->name('pegawai.all');
+
+Route::middleware(['auth:karyawan'])->group(function () {
+    Route::post('/cuti/store', [CutiController::class, 'store']);
+    Route::post('/izin/store', [IzinController::class, 'store']);
+});
+
+Route::middleware(['auth:penyelia'])->group(function () {
+    Route::post('/cuti/approve/{id}', [CutiController::class, 'approve']);
+    Route::post('/izin/approve/{id}', [IzinController::class, 'approve']);
+});

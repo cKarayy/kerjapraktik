@@ -53,5 +53,26 @@ class ShiftController extends Controller
         return response()->json(['message' => 'Shifts berhasil disimpan.']);
     }
 
+    public function index()
+    {
+        $shifts = shifts::all();
+        return response()->json($shifts);
+    }
+
+    // Mengupdate data shift
+    public function update(Request $request, $id)
+    {
+        $shift = shifts::findOrFail($id);
+        $shift->update($request->all());
+        return response()->json(['message' => 'Shift berhasil diupdate']);
+    }
+
+    // Menghapus shift
+    public function delete(Request $request)
+    {
+        shifts::whereIn('id', $request->ids)->delete();
+        return response()->json(['message' => 'Shift berhasil dihapus']);
+    }
+
 
 }

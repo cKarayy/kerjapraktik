@@ -17,7 +17,7 @@
     </div>
 
     <div class="greeting">
-        <h2>Hai <span id="nama-pegawai">{{ $pegawai->nama_lengkap }}</span>.</h2>
+        <h2>Hai, <span id="nama-pegawai">{{ $pegawai->nama_lengkap }}</span>.</h2>
         <p>Semangat Bekerja!</p>
     </div>
 

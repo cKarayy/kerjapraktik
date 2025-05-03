@@ -20,4 +20,15 @@ class Employee extends Authenticatable
     {
         return $this->hasMany(Absensi::class, 'id_karyawan');
     }
+
+    public function cutis()
+    {
+        return $this->hasMany(Cuti::class, 'id_karyawan');
+    }
+
+    public function izins()
+    {
+        return $this->hasMany(Izin::class, 'id_karyawan');
+    }
+
 }
