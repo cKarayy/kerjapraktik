@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Izin extends Model
 {
-    protected $fillable = ['id_karyawan', 'tanggal', 'alasan', 'status', 'id_penyelia'];
+    protected $fillable = ['id_karyawan', 'tanggal', 'alasan', 'status', 'id_penyelia', 'id_shift'];
 
     public function karyawan()
     {
@@ -17,4 +17,10 @@ class Izin extends Model
     {
         return $this->belongsTo(Penyelia::class, 'id_penyelia');
     }
+
+    public function shift()
+    {
+        return $this->belongsTo(shifts::class, 'id_shift', 'id_shift');
+    }
+
 }

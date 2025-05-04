@@ -1,19 +1,19 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QRController;
-use App\Http\Controllers\LaporanKehadiranController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ShiftController;
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoginUserController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\IzinController;
 use App\Models\Employee;
-use Symfony\Component\Mailer\Test\Constraint\EmailCount;
-
+use App\Http\Controllers\PegawaiHistoryController;
+use App\Http\Controllers\AbsensiController;
+use App\Models\Absensi;
 
 //admin
 Route::get('/', function () {
@@ -27,6 +27,8 @@ Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('adm
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.submit');
 
 Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
+
+Route::post('/admin/laporan', [AbsensiController::class, 'scan'])->name(name: 'admin.laporan'); //salah masih
 
 Route::middleware(['auth:admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'admDashboard'])->name('admin.dashboard');
@@ -46,8 +48,6 @@ Route::get('/qrcode', function () {
 Route::post('/scan-qr', [QRController::class, 'scanQR'])->name('scan.qr');
 
 Route::get('/generate-qr/{shift}', [QRController::class, 'generate'])->name('generate.qr.shift');
-
-Route::get('/admin/laporan', [LaporanKehadiranController::class, 'getReport'])->name('admin.laporan');
 
 Route::get('/data_admin', function () {
     $employees = Employee::all()->map(function ($employee) {
@@ -85,6 +85,9 @@ Route::get('/data_py', function () {
 
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
+
+Route::middleware(['auth:penyelia'])->post('/izin/approve/{id}', [IzinController::class, 'approve']);
+Route::middleware(['auth:penyelia'])->post('/izin/reject/{id}', [IzinController::class, 'reject']);
 
 // Route::post('/data_py/delete', [EmployeeController::class, 'destroy'])->name('data_py.delete');
 // Route::post('/data_py/edit/{id}', [EmployeeController::class, 'update'])->name(name: 'data_py.edit');
@@ -133,19 +136,27 @@ Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pega
 Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
 
-
-Route::get('/pegawai/history', action: function () {
-    return view('pegawai.history');
-})->name('pegawai.history');
+Route::get('/pegawai/history', [PegawaiHistoryController::class, 'index'])->middleware('auth:karyawans')->name('pegawai.history');
 
 Route::get('/pegawai/all', [EmployeeController::class, 'show'])->name('pegawai.all');
 
-Route::middleware(['auth:karyawan'])->group(function () {
-    Route::post('/cuti/store', [CutiController::class, 'store']);
-    Route::post('/izin/store', [IzinController::class, 'store']);
-});
+// Route::middleware(['auth:karyawan'])->group(function () {
+//     Route::post('/cuti/store', [CutiController::class, 'store']);
+//     Route::post('/izin/store', [IzinController::class, 'store']);
+// });
 
-Route::middleware(['auth:penyelia'])->group(function () {
-    Route::post('/cuti/approve/{id}', [CutiController::class, 'approve']);
-    Route::post('/izin/approve/{id}', [IzinController::class, 'approve']);
-});
+// Route::middleware(['auth:penyelia'])->group(function () {
+//     Route::post('/cuti/approve/{id}', [CutiController::class, 'approve']);
+//     Route::post('/izin/approve/{id}', [IzinController::class, 'approve']);
+// });
+
+// Route::middleware('auth')->post('/izin/store', [IzinController::class, 'store']);
+
+// Route::post('/izin/store', [IzinController::class, 'store'])->name('izin.store');
+Route::post('/izin/approve/{id}', [IzinController::class, 'approve']);
+Route::post('/izin/reject/{id}', [IzinController::class, 'reject']);
+
+Route::post('/izin', [IzinController::class, 'store'])->name('izin.store');
+Route::post('/cuti', action: [CutiController::class, 'store'])->name(name: 'cuti.store');
+
+Route::post('/absensi/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');

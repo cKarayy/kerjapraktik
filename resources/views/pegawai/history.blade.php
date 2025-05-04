@@ -9,57 +9,51 @@
 <body>
 
     <div class="header">
-        <a href="{{ route('pegawai.login') }}">
+        <a href="{{ route('pegawai.loginPg') }}">
             <img src="{{ asset('images/logout.png') }}" alt="Logout" class="back-btn">
         </a>
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
     </div>
 
-        <!-- Tabel Riwayat Kehadiran -->
-        <div class="container">
-            <table>
-                <thead>
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>TANGGAL, WAKTU</th>
+                    <th>ALASAN</th>
+                    <th>STATUS</th>
+                    <th>KETERLAMBATAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{-- @foreach($kehadiran as $item)
                     <tr>
-                        <th>TANGGAL, WAKTU</th>
-                        <th>KEHADIRAN</th>
-                        <th>KETERLAMBATAN</th>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
+                        <td>Hadir</td>
+                        <td>{{ $item->keterlambatan ?? '-' }}</td>
+                        <td>-</td>
                     </tr>
-                </thead>
-                <tbody id="history-body">
-                    <!-- Data akan ditambahkan secara real-time di sini -->
-                </tbody>
-            </table>
-        </div>
+                @endforeach --}}
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            loadHistory();
-        });
+                @foreach($izin as $item)
+                    <tr>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
+                        <td>Izin ({{ ucfirst($item->status) }})</td>
+                        <td>-</td>
+                        <td>{{ $item->alasan }}</td>
+                    </tr>
+                @endforeach
 
-        // Simpan data ke localStorage agar tetap ada
-        function addHistory(tanggal, waktu, status, keterlambatan) {
-            let history = JSON.parse(localStorage.getItem("history")) || [];
-            history.push({ tanggal, waktu, status, keterlambatan });
-            localStorage.setItem("history", JSON.stringify(history));
-            loadHistory();
-        }
-
-        // Memuat data history dari localStorage
-        function loadHistory() {
-            let history = JSON.parse(localStorage.getItem("history")) || [];
-            let tbody = document.getElementById("history-body");
-            tbody.innerHTML = "";
-
-            history.forEach(item => {
-                let row = `<tr>
-                    <td>${item.tanggal}, ${item.waktu}</td>
-                    <td>${item.status}</td>
-                    <td>${item.keterlambatan}</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        }
-
-    </script>
+                @foreach($cuti as $item)
+                    <tr>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}</td>
+                        <td>Cuti ({{ ucfirst($item->status) }})</td>
+                        <td>-</td>
+                        <td>{{ $item->alasan }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

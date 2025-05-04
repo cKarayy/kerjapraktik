@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('izins', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_karyawan');
-            $table->date('tanggal'); // hanya satu hari
+            $table->dateTime('tanggal');
             $table->text('alasan');
             $table->enum('status', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
             $table->unsignedBigInteger('id_penyelia')->nullable();

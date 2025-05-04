@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Pegawai</title>
     <link rel="stylesheet" href="{{ asset('css/pegawai/home.css') }}">
-
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <!-- Header -->
@@ -38,11 +38,11 @@
         <div class="popup-content">
             <h3>IZIN</h3>
             <p class="label-izin">Tulis alasan izin dibawah ini:</p>
-            <input type="text" id="alasan-izin" class="input-underline">
+            <input type="text" id="alasan-izin" class="input-underline" required>
 
             <div class="popup-buttons">
-                <button class="btn-done" onclick="submitIzin()">DONE</button>
-                <button class="btn-cancel" onclick="closePopup('popup-izin')">CANCEL</button>
+                <button type="button" class="btn-done" onclick="submitIzin()">DONE</button>
+                <button type="button" class="btn-cancel" onclick="closePopup('popup-izin')">CANCEL</button>
             </div>
         </div>
     </div>
@@ -111,15 +111,33 @@
             document.getElementById(id).style.display = "none";
         }
 
+        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
         function submitIzin() {
-            let alasan = document.getElementById("alasan-izin").value;
+            const alasan = document.getElementById('alasan-izin').value;
+
             if (alasan.trim() === "") {
-                alert("Masukkan alasan izin!");
+                alert("Alasan tidak boleh kosong!");
                 return;
             }
-            showNotification("izin");
-            closePopup('popup-izin');
-            changeColor("btn-izin");
+
+            fetch("/izin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                },
+                body: JSON.stringify({ alasan: alasan })
+            })
+            .then(response => {
+                if (response.ok) {
+                    closePopup('popup-izin');
+                    showNotification("izin");
+                    changeColor("btn-izin");
+                } else {
+                    alert("Gagal mengajukan izin.");
+                }
+            });
         }
 
         function submitCuti() {
@@ -132,10 +150,35 @@
                 return;
             }
 
-            showNotification("cuti");
-            closePopup('popup-cuti');
-            changeColor("btn-cuti");
+            fetch('/cuti', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    tanggal_mulai: mulai,
+                    tanggal_selesai: selesai,
+                    alasan: alasan
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Data dari server:', data); // Menampilkan data response
+                if (data.success) {
+                    showNotification("cuti");
+                    closePopup('popup-cuti');
+                    changeColor("btn-cuti");
+                } else {
+                    alert("Gagal mengirim cuti: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Terjadi kesalahan, coba lagi.");
+            });
         }
+
 
         function showNotification(jenis) {
             let gambar = "";

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cuti;
+use App\Models\Employee;
 
 class CutiController extends Controller
 {
@@ -15,15 +16,26 @@ class CutiController extends Controller
             'alasan' => 'required|string'
         ]);
 
-        Cuti::create([
-            'id_karyawan' => auth('employee')->user()->id_karyawan,
+        $idKaryawan = auth(guard: 'karyawans')->user()->id_karyawan;
+        $karyawan = Employee::find($idKaryawan);
+
+        $cuti = Cuti::create([
+            'id_karyawan' => $idKaryawan,
+            'id_shift' => $karyawan->id_shift,
             'tanggal_mulai' => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
             'alasan' => $request->alasan,
+            'status' => 'menunggu',
         ]);
 
-        return redirect()->back()->with('success', 'Pengajuan cuti berhasil dikirim.');
+        // Mengembalikan response dengan data yang sesuai
+        return response()->json([
+            'success' => true,
+            'message' => 'Cuti berhasil diajukan',
+            'data' => $cuti // Menambahkan data cuti yang baru dibuat
+        ]);
     }
+
 
     public function approve($id)
     {
