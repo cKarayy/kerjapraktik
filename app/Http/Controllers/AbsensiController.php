@@ -47,4 +47,34 @@ class AbsensiController extends Controller
         // Redirect atau response dengan pesan sukses
         return response()->json(['message' => 'Absensi berhasil dicatat', 'status' => 'success']);
     }
+
+    public function store(Request $request)
+    {
+    $request->validate([
+        'id_karyawan' => 'required|exists:karyawans,id',
+        'id_shift' => 'required|exists:shifts,id'
+    ]);
+
+    $tanggal = date('Y-m-d');
+
+    // Cek apakah sudah absen hari ini
+    $sudahAbsen = Absensi::where('id_karyawan', $request->id_karyawan)
+        ->whereDate('waktu_absen', $tanggal)
+        ->exists();
+
+    if ($sudahAbsen) {
+        return response()->json(['success' => false, 'message' => 'Kamu sudah absen hari ini.']);
+    }
+
+    Absensi::create([
+        'id_karyawan' => $request->id_karyawan,
+        'id_shift' => $request->id_shift,
+        'waktu_absen' => now(),
+    ]);
+
+    return response()->json(['success' => true, 'message' => 'Absen berhasil.']);
+    }
+
+
+
 }

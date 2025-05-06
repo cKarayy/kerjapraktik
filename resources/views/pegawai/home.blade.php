@@ -21,17 +21,19 @@
         <p>Semangat Bekerja!</p>
     </div>
 
-
     <div class="container">
         <button id="btn-hadir" class="btn hadir" onclick="scanQR()">HADIR</button>
         <button id="btn-izin" class="btn izin" onclick="openPopup('popup-izin')">IZIN</button>
         <button id="btn-cuti" class="btn cuti" onclick="openPopup('popup-cuti')">CUTI</button>
-        <button class="btn logout"  type="submit" onclick="document.getElementById('logout-form').submit()">LOGOUT</button>
+        <button class="btn logout" type="submit" onclick="document.getElementById('logout-form').submit()">LOGOUT</button>
 
         <form id="logout-form" action="{{ route('pegawai.logout') }}" method="POST" style="display: none;">
             @csrf
         </form>
     </div>
+
+    <!-- QR Camera Preview -->
+    <video id="preview" style="width: 100%; max-width: 400px; display: none;"></video>
 
     <!-- Popup Izin -->
     <div id="popup-izin" class="popup">
@@ -78,29 +80,97 @@
         <p id="notifikasi-text"></p>
     </div>
 
+    <!-- jsQR library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+
     <script>
+        let scanning = false;
+        let video = null;
+        let canvas = null;
+        let canvasContext = null;
+
+        function scanQR() {
+            video = document.getElementById("preview");
+            video.style.display = "block";
+
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" }
+                }
+            })
+            .then(function(stream) {
+                scanning = true;
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true); 
+                video.play();
+
+                canvas = document.createElement("canvas");
+                canvasContext = canvas.getContext("2d");
+
+                requestAnimationFrame(tick);
+            })
+            .catch(function(err) {
+                alert("Tidak bisa mengakses kamera: " + err.message);
+            });
+        }
+
+        function tick() {
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth;
+                canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+                let imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+                let code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: "dontInvert"
+                });
+
+                if (code) {
+                    scanning = false;
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.style.display = "none";
+
+                    try {
+                        let data = JSON.parse(code.data);
+
+                        fetch("{{ route('absensi.store') }}", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(res => res.json())
+                        .then(response => {
+                            if (response.success) {
+                                showNotification("hadir");
+                                changeColor("btn-hadir");
+                            } else {
+                                alert(response.message);
+                            }
+                        });
+
+                    } catch (e) {
+                        alert("QR code tidak valid!");
+                    }
+
+                    return;
+                }
+            }
+
+            if (scanning) {
+                requestAnimationFrame(tick);
+            }
+        }
+
         function changeColor(id) {
             let tombol = document.getElementById(id);
-
             tombol.style.backgroundColor = "#4B0082";
             tombol.style.color = "white";
-
             setTimeout(() => {
                 tombol.style.backgroundColor = "#FFD700";
                 tombol.style.color = "#4B0082";
             }, 3000);
-        }
-
-        function scanQR() {
-            let now = new Date();
-            let tanggal = now.toLocaleDateString("id-ID");
-            let waktu = now.toLocaleTimeString("id-ID");
-            let keterlambatan = "00.00.00"; // Bisa dihitung otomatis nanti
-
-            alert("Membuka kamera untuk scan QR...");
-            showNotification("hadir");
-            changeColor("btn-hadir");
-            addHistory(tanggal, waktu, "Hadir", keterlambatan);
         }
 
         function openPopup(id) {
@@ -111,11 +181,8 @@
             document.getElementById(id).style.display = "none";
         }
 
-        var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
         function submitIzin() {
             const alasan = document.getElementById('alasan-izin').value;
-
             if (alasan.trim() === "") {
                 alert("Alasan tidak boleh kosong!");
                 return;
@@ -164,7 +231,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Data dari server:', data); // Menampilkan data response
                 if (data.success) {
                     showNotification("cuti");
                     closePopup('popup-cuti');
@@ -178,7 +244,6 @@
                 alert("Terjadi kesalahan, coba lagi.");
             });
         }
-
 
         function showNotification(jenis) {
             let gambar = "";
@@ -203,11 +268,6 @@
                 document.getElementById("notifikasi").style.display = "none";
             }, 3000);
         }
-
-        // function logout() {
-        //     document.getElementById('logout-form').submit();
-        // }
     </script>
-
 </body>
 </html>

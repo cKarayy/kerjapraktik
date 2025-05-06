@@ -159,4 +159,14 @@ Route::post('/izin/reject/{id}', [IzinController::class, 'reject']);
 Route::post('/izin', [IzinController::class, 'store'])->name('izin.store');
 Route::post('/cuti', action: [CutiController::class, 'store'])->name(name: 'cuti.store');
 
-Route::post('/absensi/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+// Route::post('/absensi/scan', [AbsensiController::class, 'scan'])->name('absensi.scan');
+
+Route::get('/absensi/scan', function () {
+    return view('absensi');
+})->name('absensi.scan');
+
+// Menyimpan data absensi
+Route::post('/absensi/store', [AbsensiController::class, 'store'])->name('absensi.store');
+
+
+
