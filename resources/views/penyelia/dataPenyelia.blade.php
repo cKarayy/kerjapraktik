@@ -69,8 +69,15 @@
                 alert("Silakan pilih aksi terlebih dahulu.");
                 return;
             }
+
             window.selectedActionValue = selectedAction.value;
             updateEmployeeCardUI(window.selectedActionValue);
+
+            if (window.selectedActionValue === 'edit') {
+                loadShiftFromDatabase(true); // tampilkan input shift
+            } else {
+                loadShiftFromDatabase(false);
+            }
         }
 
         function updateEmployeeCardUI(actionValue) {
@@ -79,6 +86,63 @@
                 const statusBox = card.querySelector('.status-box');
                 const shiftBox = card.querySelector('.shift-box');
                 const cardActions = card.querySelector('.card-actions'); // Tombol aksi
+
+                if (actionValue === 'edit') {
+                    // Tampilkan input untuk status dan shift
+                    cards.forEach(card => {
+                        const currentStatus = card.querySelector('.status-box')?.textContent.trim().toLowerCase();
+                        const currentShift = card.querySelector('.shift-box')?.textContent.trim();
+                        const currentRole = card.querySelector('.employee-role')?.textContent.trim();
+                        const shiftCards = document.querySelectorAll('.shift-card');
+
+                        // Ganti status-box jadi dropdown
+                        const statusBox = card.querySelector('.status-box');
+                        if (statusBox) {
+                            const statusSelect = document.createElement('select');
+                            statusSelect.classList.add('edit-status');
+                            ['active', 'resign'].forEach(option => {
+                                const opt = document.createElement('option');
+                                opt.value = option;
+                                opt.textContent = option.toUpperCase();
+                                if (option === currentStatus) opt.selected = true;
+                                statusSelect.appendChild(opt);
+                            });
+                            statusBox.replaceWith(statusSelect);
+                        }
+
+                        // Ganti shift-box jadi dropdown
+                        const shiftBox = card.querySelector('.shift-box');
+                        if (shiftBox) {
+                            const shiftSelect = document.createElement('select');
+                            shiftSelect.classList.add('edit-shift');
+
+                            shiftList.forEach(shift => {
+                                const opt = document.createElement('option');
+                                opt.value = shift.nama_shift;
+                                opt.textContent = shift.nama_shift.toUpperCase();
+                                if (shift.nama_shift.toUpperCase() === currentShift) opt.selected = true;
+                                shiftSelect.appendChild(opt);
+                            });
+                            shiftBox.replaceWith(shiftSelect);
+                        }
+
+                        const rolePara = card.querySelector('.employee-role');
+                        if (rolePara) {
+                            const roleInput = document.createElement('input');
+                            roleInput.type = 'text';
+                            roleInput.classList.add('edit-role');
+                            roleInput.value = currentRole;
+                            rolePara.replaceWith(roleInput);
+                        }
+
+                        shiftCards.forEach(card => {
+                            card.querySelector('.shift-text').style.display = 'none';
+                            card.querySelector('.edit-shift-nama').style.display = 'inline';
+                            card.querySelector('.edit-shift-masuk').style.display = 'inline';
+                            card.querySelector('.edit-shift-keluar').style.display = 'inline';
+                        });
+                    });
+                }
 
                 // Menambahkan atau menghapus ikon sampah berdasarkan pilihan aksi
                 if (actionValue === 'delete') {
@@ -197,14 +261,21 @@
             fetch("/shifts/all")
                 .then(res => res.json())
                 .then(shifts => {
-                    shiftList = shifts; // simpan untuk dropdown
+                    shiftList = shifts;
                     let html = "";
                     shifts.forEach(shift => {
                         html += `
                             <div class="employee-card shift-card" data-id="${shift.id_shift}">
                                 <div class="shift-info">
-                                    <h2 class="shift-name">${shift.nama_shift}</h2>
-                                    <p class="shift-time">${shift.jam_masuk} - ${shift.jam_keluar}</p>
+                                    <h2 class="shift-name">
+                                        <span class="shift-text">${shift.nama_shift}</span>
+                                        <input class="edit-shift-nama" type="text" value="${shift.nama_shift}" style="display:none;">
+                                    </h2>
+                                    <p class="shift-time">
+                                        <span class="shift-text">${shift.jam_masuk} - ${shift.jam_keluar}</span>
+                                        <input class="edit-shift-masuk" type="time" value="${shift.jam_masuk}" style="display:none;">
+                                        <input class="edit-shift-keluar" type="time" value="${shift.jam_keluar}" style="display:none;">
+                                    </p>
                                 </div>
                             </div>
                         `;
@@ -214,13 +285,11 @@
                 .catch(error => console.error("Gagal memuat data shift:", error));
         }
 
-
         // Event Listener radio
         document.querySelectorAll('input[name="action"]').forEach(radio =>
             radio.addEventListener("change", applyAction)
         );
 
-        // Tombol DONE
         document.getElementById("doneButton").onclick = function () {
             const actionValue = document.querySelector('input[name="action"]:checked')?.value;
 
@@ -232,9 +301,10 @@
                     const id = card.getAttribute('data-id');
                     const status = card.querySelector('.edit-status')?.value;
                     const shift = card.querySelector('.edit-shift')?.value;
+                    const role = card.querySelector('.edit-role')?.value;
 
                     if (id && status && shift) {
-                        updates.push({ id, status, shift });
+                        updates.push({ id, status, shift, role});
                     }
                 });
 
@@ -247,7 +317,8 @@
                         },
                         body: JSON.stringify({
                             status: emp.status,
-                            shift: emp.shift
+                            shift: emp.shift,
+                            role: emp.role
                         }),
                     })
                     .then(response => {
@@ -276,10 +347,29 @@
                                 shiftBox.style.display = 'block';
 
                                 // Sembunyikan input dropdown (edit mode)
-                                const statusSelect = card.querySelector('.edit-status');
-                                const shiftSelect = card.querySelector('.edit-shift');
-                                if (statusSelect) statusSelect.style.display = 'none';
-                                if (shiftSelect) shiftSelect.style.display = 'none';
+                                if (statusSelect) {
+                                    const newStatusDiv = document.createElement('div');
+                                    newStatusDiv.className = `status-box ${emp.status === 'active' ? 'status-active' : 'status-resign'}`;
+                                    newStatusDiv.textContent = emp.status.toUpperCase();
+                                    statusSelect.replaceWith(newStatusDiv);
+                                }
+
+                                // Ganti dropdown shift menjadi div shift-box
+                                if (shiftSelect) {
+                                    const newShiftDiv = document.createElement('div');
+                                    newShiftDiv.className = 'shift-box';
+                                    newShiftDiv.textContent = emp.shift.toUpperCase();
+                                    shiftSelect.replaceWith(newShiftDiv);
+                                }
+
+                                // Ganti input role menjadi p.role kembali
+                                const roleInput = card.querySelector('.edit-role');
+                                if (roleInput) {
+                                    const newRoleP = document.createElement('p');
+                                    newRoleP.className = 'employee-role';
+                                    newRoleP.textContent = emp.role;
+                                    roleInput.replaceWith(newRoleP);
+                                }
                             }
                         });
 
@@ -307,6 +397,32 @@
                 });
 
                 alert('Semua data berhasil diproses.');
+
+                 // Ambil data shift yang diedit
+                 const shiftCards = document.querySelectorAll('.shift-card');
+                shiftCards.forEach(card => {
+                    const id = card.getAttribute('data-id');
+                    const nama_shift = card.querySelector('.edit-shift-nama').value;
+                    const jam_masuk = card.querySelector('.edit-shift-masuk').value;
+                    const jam_keluar = card.querySelector('.edit-shift-keluar').value;
+
+                    fetch(`/shifts/update/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ nama_shift, jam_masuk, jam_keluar })
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error("Gagal update shift");
+                        return res.json();
+                    })
+                    .then(() => {
+                        console.log(`Shift ${id} berhasil diperbarui`);
+                    })
+                    .catch(err => console.error(err));
+                });
             }
             else if (actionValue === 'delete') {
             // Ambil semua card yang telah dipilih untuk dihapus
@@ -346,6 +462,8 @@
                 alert("Pilih pegawai yang ingin dihapus.");
             }
             }
+
+
         };
 
         // Tombol CANCEL

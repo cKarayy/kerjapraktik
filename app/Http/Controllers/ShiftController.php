@@ -63,16 +63,15 @@ class ShiftController extends Controller
     public function update(Request $request, $id)
     {
         $shift = shifts::findOrFail($id);
-        $shift->update($request->all());
-        return response()->json(['message' => 'Shift berhasil diupdate']);
+        $shift->nama_shift = $request->nama_shift;
+        $shift->jam_masuk = $request->jam_masuk;
+        $shift->jam_keluar = $request->jam_keluar;
+        $shift->save();
+
+        return response()->json(['message' => 'Shift updated']);
     }
 
-    // Menghapus shift
-    public function delete(Request $request)
-    {
-        shifts::whereIn('id', $request->ids)->delete();
-        return response()->json(['message' => 'Shift berhasil dihapus']);
-    }
+
 
 
 }

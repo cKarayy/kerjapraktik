@@ -61,25 +61,49 @@ class EmployeeController extends Controller
      }
 
      public function update(Request $request, $id)
-     {
-         $employee = Employee::find($id);
+    {
+        // Validasi input
+        $request->validate([
+            'status' => 'required|string',
+            'shift'  => 'required|string',
+            'role'   => 'required|string',
+        ]);
 
-         if ($employee) {
-             $employee->status = $request->status;
+        // Temukan data pegawai berdasarkan ID
+        $employee = Employee::find($id);
 
-             // Cari ID shift berdasarkan nama shift
-             $shift = Shifts::where('nama_shift', $request->shift)->first();
-             if ($shift) {
-                 $employee->id_shift = $shift->id_shift;
-             }
+        if (!$employee) {
+            return response()->json(['message' => 'Pegawai tidak ditemukan.'], 404);
+        }
 
-             $employee->save();
+        // Update status dan role (alias dari jabatan)
+        $employee->status  = $request->status;
+        $employee->jabatan = $request->role;
 
-             return response()->json(['message' => 'Data berhasil diperbarui!']);
-         }
+        // Cari ID shift berdasarkan nama shift
+        $shift = Shifts::where('nama_shift', $request->shift)->first();
 
-         return response()->json(['message' => 'Pegawai tidak ditemukan.'], 404);
-     }
+        if (!$shift) {
+            return response()->json(['message' => 'Shift tidak ditemukan.'], 404);
+        }
+
+        $employee->id_shift = $shift->id_shift;
+
+        // Simpan perubahan
+        $employee->save();
+
+        return response()->json([
+            'message' => 'Data berhasil diperbarui!',
+            'data'    => [
+                'id'     => $employee->id,
+                'status' => $employee->status,
+                'shift'  => $shift->nama_shift,
+                'role'   => $employee->jabatan,
+            ]
+        ]);
+    }
+
+
 
 
      // Menghapus pegawai

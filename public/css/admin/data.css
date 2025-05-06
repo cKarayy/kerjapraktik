@@ -546,3 +546,11 @@ body {
     margin-right: 30px;
 }
 
+.edit-role {
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    color: inherit;
+    width: 100%;
+}
