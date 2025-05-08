@@ -2,79 +2,76 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Absensi;
-use App\Models\shifts;
-use App\Models\Employee;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\Absensi;
+use App\Models\QR;
+use App\Models\shifts;
+use Carbon\Carbon;
 
 class AbsensiController extends Controller
 {
-    /**
-     * Menerima data scan QR Code dan mencatat absensi.
-     */
-    public function scan(Request $request)
+
+public function scan(Request $request)
     {
-        // Validasi input dari QR code
-        $request->validate([
-            'id_karyawan' => 'required|exists:karyawans,id_karyawan',
-            'id_shift' => 'required|exists:shifts,id_shift',
-            'waktu_scan' => 'required|date',
-        ]);
+        // Mendapatkan data yang dikirimkan oleh frontend
+        $idKaryawan = $request->input('id_karyawan');  // ID karyawan yang sedang login
+        $idShift = $request->input('id_shift');  // ID shift dari frontend
+        $status = $request->input('status');  // Status kehadiran (Hadir)
+        $waktuMasuk = $request->input('waktu_masuk');  // Waktu absensi
+        $idCode = $request->input('id_code');  // ID QR Code dari hasil scan
+        $keterlambatan = $request->input('keterlambatan');  // Keterlambatan dalam menit
 
-        // Ambil data shift untuk menghitung keterlambatan
-        $shift = shifts::find($request->id_shift);
-        $waktu_shift = Carbon::parse($shift->waktu_mulai);
-        $waktu_scan = Carbon::parse($request->waktu_scan);
+        // Validasi apakah id_code valid (ada di tabel QR Code)
+        $qrCode = QR::find($idCode);  // Pastikan menggunakan model QR yang benar
+        if (!$qrCode) {
+            return response()->json(['success' => false, 'message' => 'QR Code tidak valid.']);
+        }
 
-        // Hitung keterlambatan (dalam menit)
-        $keterlambatan = $waktu_scan->diffInMinutes($waktu_shift, false);
-        $keterlambatan = $keterlambatan > 0 ? $keterlambatan : 0;  // Tidak negatif
+        // Menyimpan data absensi ke tabel Absensi
+        $absensi = new Absensi();
+        $absensi->id_karyawan = $idKaryawan;
+        $absensi->id_admin = 1;  // Admin ID bisa disesuaikan (misalnya admin yang login)
+        $absensi->tanggal = Carbon::today();  // Tanggal absensi menggunakan Carbon (hari ini)
+        $absensi->waktu_masuk = Carbon::parse($waktuMasuk);  // Waktu saat absensi
+        $absensi->kehadiran = $status;  // Status kehadiran (Hadir)
+        $absensi->id_shift = $idShift;  // ID shift pegawai
+        $absensi->keterlambatan = $keterlambatan;  // Keterlambatan dalam menit
+        $absensi->id_code = $idCode;  // ID QR code
+        $absensi->save();
 
-        // Tentukan status kehadiran (misal hadir, terlambat, atau lainnya)
-        $kehadiran = $keterlambatan > 0 ? 'Terlambat' : 'Hadir';
-
-        // Buat data absensi baru berdasarkan scan QR code
-        Absensi::create([
-            'id_karyawan' => $request->id_karyawan,
-//            'id_shift' => $request->id_shift,
-            'tanggal' => Carbon::today()->toDateString(),
-            'waktu_masuk' => $waktu_scan,
-            'kehadiran' => $kehadiran,
-            'keterlambatan' => $keterlambatan,
-        ]);
-
-        // Redirect atau response dengan pesan sukses
-        return response()->json(['message' => 'Absensi berhasil dicatat', 'status' => 'success']);
+        return response()->json(['success' => true, 'message' => 'Absensi berhasil dicatat!']);
     }
 
     public function store(Request $request)
     {
-    $request->validate([
-        'id_karyawan' => 'required|exists:karyawans,id',
-        'id_shift' => 'required|exists:shifts,id'
-    ]);
+        // Validasi input (opsional, tapi disarankan)
+        $request->validate([
+            'id_karyawan' => 'required|exists:employees,id', // Pastikan ID karyawan valid
+        ]);
 
-    $tanggal = date('Y-m-d');
+        // Ambil id_code terbaru dari tabel qr_code
+        $idCodeTerbaru = QR::orderBy('waktu_generate', 'desc')
+            ->value('id_code');
 
-    // Cek apakah sudah absen hari ini
-    $sudahAbsen = Absensi::where('id_karyawan', $request->id_karyawan)
-        ->whereDate('waktu_absen', $tanggal)
-        ->exists();
+        if (!$idCodeTerbaru) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode QR belum tersedia.',
+            ], 404);
+        }
 
-    if ($sudahAbsen) {
-        return response()->json(['success' => false, 'message' => 'Kamu sudah absen hari ini.']);
+        // Simpan data absensi ke dalam tabel absensi
+        Absensi::create([
+            'id_karyawan' => $request->id_karyawan,
+            'id_code' => $idCodeTerbaru,
+            'waktu_absen' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Absensi berhasil disimpan.',
+        ]);
     }
-
-    Absensi::create([
-        'id_karyawan' => $request->id_karyawan,
-        'id_shift' => $request->id_shift,
-        'waktu_absen' => now(),
-    ]);
-
-    return response()->json(['success' => true, 'message' => 'Absen berhasil.']);
-    }
-
 
 
 }

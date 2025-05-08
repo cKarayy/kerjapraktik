@@ -29,20 +29,15 @@
     </div>
 
     <div class="card-content">
-        <div class="image-container" >
-            @if(request('shift'))
-                    {!! QrCode::size(500)->generate(url()->current() . '?shift=' . request('shift')) !!}
+        <div class="image-container">
+            @if($shift && $qrCode)
+                {!! $qrCode !!}  <!-- Menampilkan QR Code dalam format SVG -->
+                <p id="time-display" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
             @else
                 <p style="text-align:center;">Silakan pilih shift terlebih dahulu</p>
             @endif
         </div>
-
-        @if(request('shift'))
-        <p id="time-display" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
-        @endif
     </div>
-
-
 
     <script>
         function selectShift(shift) {
@@ -54,12 +49,14 @@
             if (shift) {
                 // Countdown refresh
                 let timeLeft = 5;
-                setInterval(() => {
+                const timeDisplay = document.getElementById("time-display");
+
+                const timer = setInterval(() => {
                     if (timeLeft > 0) {
-                        document.getElementById("time-display").textContent =
-                            "Refresh in " + timeLeft + " second...";
+                        timeDisplay.textContent = "Refresh in " + timeLeft + " second...";
                         timeLeft--;
                     } else {
+                        clearInterval(timer);
                         window.location.reload();
                     }
                 }, 1000);

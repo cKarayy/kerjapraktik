@@ -6,6 +6,7 @@
     <title>Dashboard Pegawai</title>
     <link rel="stylesheet" href="{{ asset('css/pegawai/home.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
     <!-- Header -->
@@ -22,6 +23,10 @@
     </div>
 
     <div class="container">
+        <input type="hidden" id="karyawan_id" value="{{ $pegawai->id }}">
+        <!-- Hidden input for id_shift -->
+        <input type="hidden" id="id_shift" value="{{ $pegawai->id_shift }}">
+
         <button id="btn-hadir" class="btn hadir" onclick="scanQR()">HADIR</button>
         <button id="btn-izin" class="btn izin" onclick="openPopup('popup-izin')">IZIN</button>
         <button id="btn-cuti" class="btn cuti" onclick="openPopup('popup-cuti')">CUTI</button>
@@ -32,8 +37,9 @@
         </form>
     </div>
 
-    <!-- QR Camera Preview -->
-    <video id="preview" style="width: 100%; max-width: 400px; display: none;"></video>
+    <!-- Tempat scanner QR -->
+    <div id="reader" style="width:300px; margin:20px auto; display:none;"></div>
+    <div id="result" style="text-align:center; color:green;"></div>
 
     <!-- Popup Izin -->
     <div id="popup-izin" class="popup">
@@ -53,20 +59,16 @@
     <div id="popup-cuti" class="popup">
         <div class="popup-content">
             <h3>CUTI</h3>
-
             <div class="input-group">
                 <label>Dari Tanggal:</label>
                 <input type="date" id="tanggal-mulai">
             </div>
-
             <div class="input-group">
                 <label>Sampai Tanggal:</label>
                 <input type="date" id="tanggal-selesai">
             </div>
-
             <p class="label-alasan">Tulis alasanmu dibawah ini:</p>
             <input type="text" id="alasan-cuti" class="input-underline">
-
             <div class="popup-buttons">
                 <button class="btn-done" onclick="submitCuti()">DONE</button>
                 <button class="btn-cancel" onclick="closePopup('popup-cuti')">CANCEL</button>
@@ -80,88 +82,8 @@
         <p id="notifikasi-text"></p>
     </div>
 
-    <!-- jsQR library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-
     <script>
-        let scanning = false;
-        let video = null;
-        let canvas = null;
-        let canvasContext = null;
-
-        function scanQR() {
-            video = document.getElementById("preview");
-            video.style.display = "block";
-
-            navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { ideal: "environment" }
-                }
-            })
-            .then(function(stream) {
-                scanning = true;
-                video.srcObject = stream;
-                video.setAttribute("playsinline", true); 
-                video.play();
-
-                canvas = document.createElement("canvas");
-                canvasContext = canvas.getContext("2d");
-
-                requestAnimationFrame(tick);
-            })
-            .catch(function(err) {
-                alert("Tidak bisa mengakses kamera: " + err.message);
-            });
-        }
-
-        function tick() {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.height = video.videoHeight;
-                canvas.width = video.videoWidth;
-                canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
-                let imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
-                let code = jsQR(imageData.data, imageData.width, imageData.height, {
-                    inversionAttempts: "dontInvert"
-                });
-
-                if (code) {
-                    scanning = false;
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.style.display = "none";
-
-                    try {
-                        let data = JSON.parse(code.data);
-
-                        fetch("{{ route('absensi.store') }}", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
-                            },
-                            body: JSON.stringify(data)
-                        })
-                        .then(res => res.json())
-                        .then(response => {
-                            if (response.success) {
-                                showNotification("hadir");
-                                changeColor("btn-hadir");
-                            } else {
-                                alert(response.message);
-                            }
-                        });
-
-                    } catch (e) {
-                        alert("QR code tidak valid!");
-                    }
-
-                    return;
-                }
-            }
-
-            if (scanning) {
-                requestAnimationFrame(tick);
-            }
-        }
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         function changeColor(id) {
             let tombol = document.getElementById(id);
@@ -172,6 +94,73 @@
                 tombol.style.color = "#4B0082";
             }, 3000);
         }
+
+      function scanQR() {
+    document.getElementById('reader').style.display = 'block';  // Menampilkan kamera QR
+    document.getElementById("btn-hadir").disabled = true;  // Menonaktifkan tombol Hadir
+    const html5Qr = new Html5Qrcode("reader");
+
+    html5Qr.start(
+        { facingMode: "environment" },  // Menggunakan kamera belakang
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+            html5Qr.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';  // Menyembunyikan kamera setelah scan
+                document.getElementById('result').innerText = "";  // Kosongkan hasil scan QR
+
+                // Jika decodedText berupa string JSON, kita perlu mengubahnya menjadi objek
+                const qrData = JSON.parse(decodedText);  // Pastikan QR mengandung data dalam format JSON
+
+                const karyawanId = document.getElementById('karyawan_id').value;  // Mengambil ID karyawan
+                const idShift = document.getElementById('id_shift').value;  // Mengambil ID shift dari data pegawai
+                const status = "hadir";  // Status absensi adalah "Hadir"
+                const waktuMasuk = new Date();  // Mengambil waktu sekarang sebagai waktu masuk
+                const idCode = qrData.uuid;  // ID QR code yang dipindai (harusnya sesuai dengan data yang di-generate sebelumnya)
+
+                // Hitung keterlambatan
+                const waktuShiftMulai = new Date(waktuMasuk.toLocaleDateString() + " " + "10:00");  // Waktu mulai shift (contoh 10:00)
+                const keterlambatan = Math.max(0, (waktuMasuk - waktuShiftMulai) / (1000 * 60));  // Menghitung keterlambatan dalam menit
+
+                // Mengirimkan seluruh data absensi ke server
+                fetch("{{ route('absensi.scan') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken
+                    },
+                    body: JSON.stringify({
+                        id_karyawan: karyawanId,  // ID karyawan yang sedang login
+                        id_shift: idShift,  // ID shift dari data pegawai
+                        status: status,  // Status kehadiran
+                        waktu_masuk: waktuMasuk.toISOString(),  // Waktu absensi (waktu saat QR dipindai)
+                        id_code: idCode,  // ID QR code yang dipindai
+                        keterlambatan: keterlambatan  // Keterlambatan dalam menit
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification("hadir");  // Menampilkan notifikasi berhasil
+                        changeColor("btn-hadir");  // Mengubah warna tombol Hadir
+                    } else {
+                        alert("Gagal: " + data.message);  // Jika gagal, tampilkan pesan error
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Terjadi kesalahan.");
+                });
+            });
+        },
+        (errorMessage) => {
+            // Callback error (opsional)
+        }
+    ).catch(err => {
+        alert("Tidak dapat membuka kamera: " + err);  // Menampilkan error jika kamera gagal
+    });
+}
+
+
 
         function openPopup(id) {
             document.getElementById(id).style.display = "block";
@@ -192,7 +181,7 @@
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                    "X-CSRF-TOKEN": csrfToken
                 },
                 body: JSON.stringify({ alasan: alasan })
             })
@@ -221,7 +210,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({
                     tanggal_mulai: mulai,
@@ -240,25 +229,15 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 alert("Terjadi kesalahan, coba lagi.");
             });
         }
 
         function showNotification(jenis) {
-            let gambar = "";
-            let pesan = "";
-
-            if (jenis === "hadir") {
-                gambar = "{{ asset('images/success.png') }}";
-                pesan = "Berhasil!";
-            } else if (jenis === "izin") {
-                gambar = "{{ asset('images/success.png') }}";
-                pesan = "Izin sudah diajukan.";
-            } else if (jenis === "cuti") {
-                gambar = "{{ asset('images/success.png') }}";
-                pesan = "Cuti sudah diajukan.";
-            }
+            let gambar = "{{ asset('images/success.png') }}";
+            let pesan = jenis === "hadir" ? "Berhasil!" :
+                        jenis === "izin" ? "Izin sudah diajukan." :
+                        "Cuti sudah diajukan.";
 
             document.getElementById("notifikasi-gambar").src = gambar;
             document.getElementById("notifikasi-text").innerText = pesan;

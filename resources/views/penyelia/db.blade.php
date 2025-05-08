@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('admin.laporan') }}" class="card">
+            <a href="{{ route('penyelia.laporanPy') }}" class="card">
                 <div class="card-header">LAPORAN ABSENSI</div>
                 <div class="card-content">
                     <img src="{{ asset('images/laporan_absensi.png') }}" alt="Laporan Absensi">

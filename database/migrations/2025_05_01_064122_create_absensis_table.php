@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('id_admin');
             $table->date('tanggal');
             $table->dateTime('waktu_masuk');
-            $table->dateTime('waktu_keluar')->nullable();
             $table->string('kehadiran');
             $table->timestamps();
 

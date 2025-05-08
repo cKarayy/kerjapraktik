@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Absensi extends Model
 {
     protected $primaryKey = 'id_absensi';
-    protected $fillable = ['id_karyawan', 'id_admin', 'tanggal', 'waktu_masuk', 'waktu_keluar', 'kehadiran', 'id_shift','keterlambatan'];
+    protected $fillable = ['id_karyawan', 'id_admin', 'tanggal', 'waktu_masuk', 'kehadiran', 'id_shift', 'keterlambatan', 'id_code'];
 
 
     public function admin()
@@ -24,5 +24,9 @@ class Absensi extends Model
     {
         return $this->belongsTo(Employee::class, 'id_karyawan');
     }
-}
 
+    public function qrCode()
+    {
+        return $this->belongsTo(QR::class, 'id_code');
+    }
+}

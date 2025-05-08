@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class QR extends Model
 {
-    protected $table = 'qr_codes';
+    protected $table = 'qr_code';
     protected $primaryKey = 'id_code';
     protected $fillable = ['id_admin', 'kode', 'waktu_generate', 'kehadiran'];
 

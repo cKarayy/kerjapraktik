@@ -20,38 +20,42 @@
             <thead>
                 <tr>
                     <th>TANGGAL, WAKTU</th>
+                    <th>KEHADIRAN</th>
                     <th>ALASAN</th>
                     <th>STATUS</th>
                     <th>KETERLAMBATAN</th>
                 </tr>
             </thead>
             <tbody>
-                {{-- @foreach($kehadiran as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>Hadir</td>
-                        <td>{{ $item->keterlambatan ?? '-' }}</td>
-                        <td>-</td>
-                    </tr>
-                @endforeach --}}
-
                 @foreach($izin as $item)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>Izin ({{ ucfirst($item->status) }})</td>
-                        <td>-</td>
+                        <td>Izin</td>
                         <td>{{ $item->alasan }}</td>
+                        <td>{{ ucfirst($item->status) }}</td>
+                        <td>-</td>
                     </tr>
                 @endforeach
 
                 @foreach($cuti as $item)
                     <tr>
                         <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}</td>
-                        <td>Cuti ({{ ucfirst($item->status) }})</td>
-                        <td>-</td>
+                        <td>Cuti</td>
                         <td>{{ $item->alasan }}</td>
+                        <td>{{ ucfirst($item->status) }}</td> 
+                        <td>-</td>
                     </tr>
                 @endforeach
+
+                {{-- @foreach($hadir as $item)
+                    <tr>
+                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
+                        <td>Hadir</td>
+                        <td>{{ $item->alasan }}</td> <!-- Menampilkan alasan -->
+                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
+                        <td>{{ $item->keterlambatan ?? '-' }}</td> <!-- Menampilkan keterlambatan jika ada -->
+                    </tr>
+                @endforeach --}}
             </tbody>
         </table>
     </div>
