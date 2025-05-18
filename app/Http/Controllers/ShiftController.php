@@ -25,7 +25,9 @@ class ShiftController extends Controller
                 'jam_keluar' => $shiftData['jam_keluar'],
             ]);
         }
-        return response()->json(['message' => 'Semua shift diperbarui']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Semua shift diperbarui']);
     }
 
     public function deleteMultiple(Request $request) {
@@ -70,8 +72,5 @@ class ShiftController extends Controller
 
         return response()->json(['message' => 'Shift updated']);
     }
-
-
-
 
 }

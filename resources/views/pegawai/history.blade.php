@@ -19,6 +19,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>No.</th> <!-- Nomor urut -->
                     <th>TANGGAL, WAKTU</th>
                     <th>KEHADIRAN</th>
                     <th>ALASAN</th>
@@ -27,8 +28,10 @@
                 </tr>
             </thead>
             <tbody>
+                @php $counter = 1; @endphp <!-- Inisialisasi counter untuk nomor urut -->
                 @foreach($izin as $item)
                     <tr>
+                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
                         <td>Izin</td>
                         <td>{{ $item->alasan }}</td>
@@ -39,16 +42,18 @@
 
                 @foreach($cuti as $item)
                     <tr>
+                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
                         <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}</td>
                         <td>Cuti</td>
                         <td>{{ $item->alasan }}</td>
-                        <td>{{ ucfirst($item->status) }}</td> 
+                        <td>{{ ucfirst($item->status) }}</td>
                         <td>-</td>
                     </tr>
                 @endforeach
 
                 {{-- @foreach($hadir as $item)
                     <tr>
+                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
                         <td>Hadir</td>
                         <td>{{ $item->alasan }}</td> <!-- Menampilkan alasan -->

@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
-        <a href="{{ route('admin.login') }}" class="login-btn">LOGIN</a>
+        <a href="{{ route('pegawai.loginPg') }}" class="login-btn">LOGIN</a>
     </div>
 </body>
 </html>

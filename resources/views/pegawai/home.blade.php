@@ -24,18 +24,32 @@
 
     <div class="container">
         <input type="hidden" id="karyawan_id" value="{{ $pegawai->id }}">
-        <!-- Hidden input for id_shift -->
         <input type="hidden" id="id_shift" value="{{ $pegawai->id_shift }}">
 
         <button id="btn-hadir" class="btn hadir" onclick="scanQR()">HADIR</button>
         <button id="btn-izin" class="btn izin" onclick="openPopup('popup-izin')">IZIN</button>
         <button id="btn-cuti" class="btn cuti" onclick="openPopup('popup-cuti')">CUTI</button>
-        <button class="btn logout" type="submit" onclick="document.getElementById('logout-form').submit()">LOGOUT</button>
 
-        <form id="logout-form" action="{{ route('pegawai.logout') }}" method="POST" style="display: none;">
-            @csrf
-        </form>
+        <!-- Tombol LOGOUT yang akan memunculkan konfirmasi -->
+        <button class="btn logout" type="button" onclick="openLogoutPopup()">LOGOUT</button>
     </div>
+
+    <!-- Popup Konfirmasi Logout -->
+    <div id="popup-logout" class="popup" style="display:none;">
+        <div class="popup-content">
+            <h3>Konfirmasi Logout</h3>
+            <p>Apakah Anda yakin ingin logout?</p>
+            <div class="popup-buttons">
+                <button type="button" class="btn-done" onclick="confirmLogout()">YA</button>
+                <button type="button" class="btn-cancel" onclick="closePopup('popup-logout')">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Logout -->
+    <form id="logout-form" action="{{ route('pegawai.logout') }}" method="POST" style="display: none;">
+        @csrf
+    </form>
 
     <!-- Tempat scanner QR -->
     <div id="reader" style="width:300px; margin:20px auto; display:none;"></div>
@@ -95,73 +109,6 @@
             }, 3000);
         }
 
-      function scanQR() {
-    document.getElementById('reader').style.display = 'block';  // Menampilkan kamera QR
-    document.getElementById("btn-hadir").disabled = true;  // Menonaktifkan tombol Hadir
-    const html5Qr = new Html5Qrcode("reader");
-
-    html5Qr.start(
-        { facingMode: "environment" },  // Menggunakan kamera belakang
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-            html5Qr.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';  // Menyembunyikan kamera setelah scan
-                document.getElementById('result').innerText = "";  // Kosongkan hasil scan QR
-
-                // Jika decodedText berupa string JSON, kita perlu mengubahnya menjadi objek
-                const qrData = JSON.parse(decodedText);  // Pastikan QR mengandung data dalam format JSON
-
-                const karyawanId = document.getElementById('karyawan_id').value;  // Mengambil ID karyawan
-                const idShift = document.getElementById('id_shift').value;  // Mengambil ID shift dari data pegawai
-                const status = "hadir";  // Status absensi adalah "Hadir"
-                const waktuMasuk = new Date();  // Mengambil waktu sekarang sebagai waktu masuk
-                const idCode = qrData.uuid;  // ID QR code yang dipindai (harusnya sesuai dengan data yang di-generate sebelumnya)
-
-                // Hitung keterlambatan
-                const waktuShiftMulai = new Date(waktuMasuk.toLocaleDateString() + " " + "10:00");  // Waktu mulai shift (contoh 10:00)
-                const keterlambatan = Math.max(0, (waktuMasuk - waktuShiftMulai) / (1000 * 60));  // Menghitung keterlambatan dalam menit
-
-                // Mengirimkan seluruh data absensi ke server
-                fetch("{{ route('absensi.scan') }}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: JSON.stringify({
-                        id_karyawan: karyawanId,  // ID karyawan yang sedang login
-                        id_shift: idShift,  // ID shift dari data pegawai
-                        status: status,  // Status kehadiran
-                        waktu_masuk: waktuMasuk.toISOString(),  // Waktu absensi (waktu saat QR dipindai)
-                        id_code: idCode,  // ID QR code yang dipindai
-                        keterlambatan: keterlambatan  // Keterlambatan dalam menit
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification("hadir");  // Menampilkan notifikasi berhasil
-                        changeColor("btn-hadir");  // Mengubah warna tombol Hadir
-                    } else {
-                        alert("Gagal: " + data.message);  // Jika gagal, tampilkan pesan error
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Terjadi kesalahan.");
-                });
-            });
-        },
-        (errorMessage) => {
-            // Callback error (opsional)
-        }
-    ).catch(err => {
-        alert("Tidak dapat membuka kamera: " + err);  // Menampilkan error jika kamera gagal
-    });
-}
-
-
-
         function openPopup(id) {
             document.getElementById(id).style.display = "block";
         }
@@ -170,83 +117,32 @@
             document.getElementById(id).style.display = "none";
         }
 
-        function submitIzin() {
-            const alasan = document.getElementById('alasan-izin').value;
-            if (alasan.trim() === "") {
-                alert("Alasan tidak boleh kosong!");
-                return;
-            }
-
-            fetch("/izin", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": csrfToken
-                },
-                body: JSON.stringify({ alasan: alasan })
-            })
-            .then(response => {
-                if (response.ok) {
-                    closePopup('popup-izin');
-                    showNotification("izin");
-                    changeColor("btn-izin");
-                } else {
-                    alert("Gagal mengajukan izin.");
-                }
-            });
+        // Fungsi untuk membuka popup konfirmasi logout
+        function openLogoutPopup() {
+            document.getElementById('popup-logout').style.display = 'block';  // Menampilkan popup
         }
 
-        function submitCuti() {
-            let mulai = document.getElementById("tanggal-mulai").value;
-            let selesai = document.getElementById("tanggal-selesai").value;
-            let alasan = document.getElementById("alasan-cuti").value;
-
-            if (!mulai || !selesai || alasan.trim() === "") {
-                alert("Lengkapi semua data cuti!");
-                return;
-            }
-
-            fetch('/cuti', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    tanggal_mulai: mulai,
-                    tanggal_selesai: selesai,
-                    alasan: alasan
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification("cuti");
-                    closePopup('popup-cuti');
-                    changeColor("btn-cuti");
-                } else {
-                    alert("Gagal mengirim cuti: " + data.message);
-                }
-            })
-            .catch(error => {
-                alert("Terjadi kesalahan, coba lagi.");
-            });
+        // Fungsi untuk menutup popup konfirmasi logout
+        function closePopup(id) {
+            document.getElementById(id).style.display = 'none';  // Menyembunyikan popup
         }
 
-        function showNotification(jenis) {
-            let gambar = "{{ asset('images/success.png') }}";
-            let pesan = jenis === "hadir" ? "Berhasil!" :
-                        jenis === "izin" ? "Izin sudah diajukan." :
-                        "Cuti sudah diajukan.";
-
-            document.getElementById("notifikasi-gambar").src = gambar;
-            document.getElementById("notifikasi-text").innerText = pesan;
-            document.getElementById("notifikasi").style.display = "block";
-
-            setTimeout(() => {
-                document.getElementById("notifikasi").style.display = "none";
-            }, 3000);
+        function confirmLogout() {
+            sessionStorage.setItem("loggedOut", "true");
+            document.getElementById('logout-form').submit();  // Melakukan submit form logout
         }
+
+        // Menghapus status logout setelah login berhasil
+        if (sessionStorage.getItem("loggedOut") === "true") {
+            sessionStorage.removeItem("loggedOut");  // Hapus status logout
+        }
+
+        // Jika pengguna sudah logout, redirect ke halaman login
+        if (sessionStorage.getItem("loggedOut") === "true") {
+            window.location.href = "{{ route('pegawai.loginPg') }}";  // Redirect ke halaman login
+        }
+
+
     </script>
 </body>
 </html>

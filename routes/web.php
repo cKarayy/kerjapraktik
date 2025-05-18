@@ -15,6 +15,7 @@ use App\Http\Controllers\PegawaiHistoryController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PenyeliaController;
+use App\Http\Middleware\NoCacheMiddleware;
 use App\Models\Absensi;
 
 //admin
@@ -22,32 +23,21 @@ Route::get('/', function () {
     return view('admin.welcome');
 });
 
-Route::get('/admin/register', [AdminController::class, 'showRegister'])->name('admin.register');
-Route::post('/admin/register', [AdminController::class, 'registerAdmin'])->name('admin.register.submit');
-
-Route::get('/admin/login', [LoginController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.submit');
-
-Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
-
 Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 
 Route::get('/admin/laporan', [AdminController::class, 'showLaporan'])->name('admin.laporan');
 
 Route::get('/admin/export/laporan', [AdminController::class, 'export'])->name('admin.export.laporan');
 
-Route::middleware(['auth:admin'])->group(function () {
-    Route::get('/admin/dashboard', [AdminController::class, 'admDashboard'])->name('admin.dashboard');
-    Route::get('/penyelia/dashboard', [AdminController::class, 'penyeliaDashboard'])->name('dashboard_py');
-});
+// Route::middleware(['auth:admin'])->group(function () {
+//     Route::get('/admin/dashboard', [AdminController::class, 'admDashboard'])->name('admin.dashboard');
+//     Route::get('/penyelia/dashboard', [AdminController::class, 'penyeliaDashboard'])->name('dashboard_py');
+// });
 
 // Default login route (fallback jika auth gagal)
 Route::get('/login', function () {
-    return redirect()->route('admin.login');
+    return redirect()->route(route: 'pegawai.loginPg');
 })->name('login');
-
-//Route::get('/generate-qr', [QRController::class, 'generate'])->name('qrcode');
-// Generate QR Code (Auto Refresh)
 
 Route::get('/qrcode', [QRController::class, 'showQRCode'])->name('qrcode');
 
@@ -110,6 +100,18 @@ Route::prefix('shifts')->group(function () {
     Route::post('/delete-multiple', [ShiftController::class, 'delete']); // Menghapus banyak shift
 });
 
+Route::get('/admin/dashboard', function () {
+    return view('admin.dashboard');
+})->name('admin.dashboard')->middleware('auth');
+
+Route::get('/penyelia/dashboard', function () {
+    return view('penyelia.db');
+})->name('dashboard_py')->middleware('auth');
+
+Route::get('/pegawai/home', function () {
+    return view('pegawai.home');
+})->name('pegawai.home')->middleware('auth');
+
 //pegawai
 Route::get('/pegawai/register', function () {
     return view('pegawai.registerPg');
@@ -118,6 +120,14 @@ Route::get('/pegawai/register', function () {
 Route::get('/pegawai/login', function () {
     return view('pegawai.loginPg');
 })->name('pegawai.loginPg');
+
+Route::get('/pegawai/ubah-password', [LoginUserController::class, 'showChangePasswordForm'])->name('pegawai.changePassword');
+Route::put('/pegawai/ubah-password', [LoginUserController::class, 'updatePassword'])->name('pegawai.updatePassword');
+
+Route::middleware([NoCacheMiddleware::class])->group(function () {
+    Route::get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
+    Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+});
 
 Route::get('/register-karyawan', [EmployeeController::class, 'create'])->name('karyawans.create');
 
@@ -128,7 +138,6 @@ Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->na
 Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
 Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
 
-Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
 
 Route::get('/pegawai/history', [PegawaiHistoryController::class, 'index'])->middleware('auth:karyawans')->name('pegawai.history');

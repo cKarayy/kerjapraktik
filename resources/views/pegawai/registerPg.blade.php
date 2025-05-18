@@ -26,6 +26,11 @@
             </div>
 
             <div class="input-row">
+                <label class="label-text" for="full_name">Username</label>
+                <input type="text" id="username" name="username" class="input-style" required>
+            </div>
+
+            <div class="input-row">
                 <label class="label-text" for="jabatan">Jabatan</label>
                 <input type="text" id="jabatan" name="jabatan" class="input-style" required>
             </div>
@@ -37,15 +42,6 @@
                     @foreach($shifts as $shift)
                         <option value="{{ $shift->nama_shift }}">{{ $shift->nama_shift }}</option>
                     @endforeach
-                </select>
-            </div>
-
-            <div class="input-row">
-                <label class="label-text" for="status">Status</label>
-                <select id="status" name="status" class="input-style" required>
-                    <option value="">Pilih Status Anda</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
                 </select>
             </div>
 

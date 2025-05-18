@@ -149,20 +149,5 @@ class AdminController extends Controller
         return view('admin.login');
     }
 
-    // Dashboard penyelia
-    public function penyeliaDashboard()
-    {
-        return view('penyelia.db');
-    }
 
-    // Dashboard admin
-    public function admDashboard()
-    {
-        return view('admin.dashboard');
-    }
-
-    public function pgDashboard()
-    {
-        return view(view: 'pegawai.home');
-    }
 }

@@ -36,26 +36,11 @@ return [
     */
 
     'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
-
-        'admin' => [
-            'driver' => 'session',
-            'provider' => 'admin',
-        ],
-
-        'penyelia' => [
-            'driver' => 'session',
-            'provider' => 'penyelias',
-        ],
-
-        'karyawans' => [
-            'driver' => 'session',
-            'provider' => 'karyawans',
-        ],
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'karyawans',
     ],
+],
 
 
     /*
@@ -76,21 +61,6 @@ return [
     */
 
     'providers' => [
-        'users' => [ // Ditambahkan agar default auth untuk 'web' berfungsi.
-            'driver' => 'eloquent',
-            'model' => App\Models\User::class, // Pastikan model User ada
-        ],
-
-        'admin' => [ // <-- ini singular: 'admin'
-            'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
-        ],
-
-        'penyelias' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Penyelia::class,
-        ],
-
         'karyawans' => [
             'driver' => 'eloquent',
             'model' => App\Models\Employee::class,

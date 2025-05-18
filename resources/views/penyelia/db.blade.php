@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Perwakilan Owner</title>
+    <title>Dashboard Admin</title>
     <link rel="stylesheet" href="{{ asset('css/admin/dashboard.css') }}">
 </head>
 <body>
     <div class="header">
-        <form action="{{ route('admin.logout') }}" method="POST">
+        <form action="{{ route('pegawai.logout') }}" method="POST" id="logout-form" style="display: none;">
             @csrf
-            <button type="submit" class="logout">
-                <img src="{{ asset('images/logout.png') }}" alt="Logout">
-            </button>
         </form>
 
+        <!-- Tombol logout yang memunculkan konfirmasi -->
+        <img src="{{ asset('images/logout.png') }}" alt="Logout" class="logout" onclick="openLogoutPopup()">
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
     </div>
 
+    <!-- Konten Dashboard Admin -->
     <div class="dashboard">
         <div class="grid-container">
             <a href="{{ route('qrcode') }}" class="card">
@@ -44,15 +44,60 @@
                     </div>
                 </div>
             </a>
-            <a href="{{ route('admin.register') }}" class="card" onclick="checkAuth(event)">
+            <a href="{{ route('pegawai.registerPg') }}" class="card" onclick="checkAuth(event)">
                 <div class="card-header">
-                    NEW ADMIN
+                    NEW EMPLOYEE
                 </div>
                 <div class="card-content">
-                    <img src="{{ asset('images/new.png') }}" alt="New Admin">
+                    <img src="{{ asset('images/new.png') }}" alt="New E">
                 </div>
             </a>
         </div>
     </div>
+
+    <!-- Popup Konfirmasi Logout -->
+    <div id="popup-logout" class="popup" style="display:none;">
+        <div class="popup-content">
+            <h3>Konfirmasi Logout</h3>
+            <p>Apakah Anda yakin ingin logout?</p>
+            <div class="popup-buttons">
+                <button type="button" class="btn-done" onclick="confirmLogout()">YA</button>
+                <button type="button" class="btn-cancel" onclick="closePopup('popup-logout')">BATAL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi untuk membuka popup konfirmasi logout
+        function openLogoutPopup() {
+            document.getElementById('popup-logout').style.display = 'block';  // Menampilkan popup
+        }
+
+        // Fungsi untuk menutup popup konfirmasi logout
+        function closePopup(id) {
+            document.getElementById(id).style.display = 'none';  // Menyembunyikan popup
+        }
+
+        // Fungsi untuk mengonfirmasi logout
+        function confirmLogout() {
+            sessionStorage.setItem("loggedOut", "true");  // Menyimpan status logout
+            document.getElementById('logout-form').submit();  // Melakukan submit form logout
+            closePopup('popup-logout');  // Menutup popup
+        }
+
+        // Memeriksa status logout dan memastikan pengguna tidak bisa kembali
+        if (sessionStorage.getItem("loggedOut") === "true") {
+            sessionStorage.removeItem("loggedOut");  // Menghapus status logout
+            window.location.href = "{{ route('pegawai.loginPg') }}";  // Redirect ke halaman login
+        }
+
+        // Menambahkan pengecekan ketika halaman dimuat (untuk mencegah kembali setelah logout)
+        window.onload = function() {
+            if (sessionStorage.getItem("loggedOut") === "true") {
+                sessionStorage.removeItem("loggedOut");  // Menghapus status logout
+                window.location.href = "{{ route('pegawai.loginPg') }}";  // Redirect ke halaman login
+            }
+        }
+    </script>
 </body>
 </html>

@@ -21,9 +21,9 @@ class EmployeeController extends Controller
         $request->validate([
             'full_name' => 'required|string|max:255',
             'jabatan' => 'required|string|max:100',
-            'shift' => 'required|string|exists:shifts,nama_shift', // Pastikan shift ada di database
-            'status' => 'required|string|in:active,inactive',
+            'shift' => 'required|string|exists:shifts,nama_shift',
             'password' => 'required|string|confirmed|min:6',
+            'username' => 'required|string|unique:karyawans,username',  // Menambahkan validasi untuk username yang unik
         ]);
 
         $shift = Shifts::where('nama_shift', $request->shift)->first();
@@ -32,16 +32,33 @@ class EmployeeController extends Controller
             return back()->withErrors(['shift' => 'Shift tidak ditemukan.'])->withInput();
         }
 
+        // Ambil username yang dimasukkan oleh pengguna
+        $username = strtolower(str_replace(' ', '.', $request->username));  // Gunakan username dari input form
+
+        // Menentukan role berdasarkan kode angka di belakang username
+        $role = 'pegawai'; // Default role
+        if (str_ends_with($username, '1')) {
+            $role = 'admin';
+        } elseif (str_ends_with($username, '2')) {
+            $role = 'pegawai';
+        }
+
+        // Jika status tidak diberikan, set default ke 'active'
+        $status = $request->status ?? 'active'; // Menetapkan status default ke active jika tidak diberikan
+
         Employee::create([
             'nama_lengkap' => Str::title($request->full_name),
             'jabatan' => strtoupper($request->jabatan),
             'id_shift' => $shift->id_shift, // Gunakan id_shift dari data shift yang ditemukan
-            'status' => $request->status,
+            'status' => $status, // Menggunakan status dari form atau default
             'password' => Hash::make($request->password),
+            'username' => $username, // Menggunakan username dari input form
+            'role' => $role, // Menetapkan role berdasarkan kode angka di belakang username
         ]);
 
         return redirect()->route('pegawai.loginPg')->with('success', 'Registrasi berhasil! Silakan login.');
     }
+
 
     public function showRegister()
     {
@@ -49,8 +66,8 @@ class EmployeeController extends Controller
         return view('pegawai.registerPg', compact('shifts'));
     }
 
-     // Menampilkan data pegawai
-     public function index()
+    // Menampilkan data pegawai
+    public function index()
      {
          // Ambil data pegawai dan shift dari database
          $employees = Employee::all();
@@ -81,7 +98,7 @@ class EmployeeController extends Controller
         $employee->jabatan = $request->role;
 
         // Cari ID shift berdasarkan nama shift
-        $shift = Shifts::where('nama_shift', $request->shift)->first();
+        $shift = shifts::where('nama_shift', $request->shift)->first();
 
         if (!$shift) {
             return response()->json(['message' => 'Shift tidak ditemukan.'], 404);
@@ -93,6 +110,7 @@ class EmployeeController extends Controller
         $employee->save();
 
         return response()->json([
+            'success' => true,
             'message' => 'Data berhasil diperbarui!',
             'data'    => [
                 'id'     => $employee->id,
@@ -102,9 +120,6 @@ class EmployeeController extends Controller
             ]
         ]);
     }
-
-
-
 
      // Menghapus pegawai
      public function delete($id)

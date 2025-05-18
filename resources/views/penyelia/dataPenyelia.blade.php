@@ -16,6 +16,12 @@
     </div>
     <div class="divider"></div>
 
+    <!-- Notifikasi -->
+    <div id="notification" class="notification">
+        <span id="notification-message">Data berhasil diperbarui</span>
+        <button id="notification-button">OK</button>
+    </div>
+
     <!-- Pilihan Aksi -->
     <div id="adminOptions" class="action-selection" style="display: flex;">
         <label class="custom-radio">
@@ -62,6 +68,87 @@
         let deletedIds = [];
         let editedEmployees = {};
         let shiftList = [];
+        let isEditMode = false;
+
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notification-message');
+            const button = document.getElementById('notification-button');
+
+            messageElement.textContent = message;
+
+            if (isError) {
+                notification.classList.add('error');
+                button.style.color = '#f44336';
+            } else {
+                notification.classList.remove('error');
+                button.style.color = '#4CAF50';
+            }
+
+            notification.style.display = 'block';
+
+            // Auto hide setelah 5 detik
+            setTimeout(() => {
+                if (notification.style.display === 'block') {
+                    notification.style.display = 'none';
+                    resetToNormalMode();
+                }
+            }, 5000);
+        }
+
+        document.getElementById('notification-button').addEventListener('click', function() {
+            document.getElementById('notification').style.display = 'none';
+            resetToNormalMode();
+        });
+
+        function resetToNormalMode() {
+        // Reset radio button
+        document.querySelectorAll('input[name="action"]').forEach(r => r.checked = false);
+
+        // Bersihkan mode edit/delete
+        document.querySelectorAll('.employee-card').forEach(card => {
+            // Ganti kembali dropdown status menjadi div
+            const statusSelect = card.querySelector('.edit-status');
+            if (statusSelect) {
+                const statusText = statusSelect.value.toUpperCase();
+                const div = document.createElement('div');
+                div.className = `status-box ${statusText === 'ACTIVE' ? 'status-active' : 'status-resign'}`;
+                div.textContent = statusText;
+                statusSelect.replaceWith(div);
+            }
+
+            // Ganti kembali dropdown shift menjadi div
+            const shiftSelect = card.querySelector('.edit-shift');
+            if (shiftSelect) {
+                const shiftText = shiftSelect.value.toUpperCase() || '-';
+                const div = document.createElement('div');
+                div.className = 'shift-box';
+                div.textContent = shiftText;
+                shiftSelect.replaceWith(div);
+            }
+
+            // Ganti kembali input role menjadi paragraf
+            const roleInput = card.querySelector('.edit-role');
+            if (roleInput) {
+                const roleText = roleInput.value;
+                const p = document.createElement('p');
+                p.className = 'employee-role';
+                p.textContent = roleText;
+                roleInput.replaceWith(p);
+            }
+
+            // Hapus tombol aksi (delete icon, dll)
+            const actions = card.querySelector('.card-actions');
+            if (actions) actions.remove();
+        });
+
+        isEditMode = false;
+    }
+
+
+        function exitEditMode() {
+            resetToNormalMode();
+        }
 
         function applyAction() {
             const selectedAction = document.querySelector('input[name="action"]:checked');
@@ -73,110 +160,138 @@
             window.selectedActionValue = selectedAction.value;
             updateEmployeeCardUI(window.selectedActionValue);
 
+            // Aksi edit
             if (window.selectedActionValue === 'edit') {
+                isEditMode = true;
                 loadShiftFromDatabase(true); // tampilkan input shift
-            } else {
+            }
+            // Aksi delete
+            else if (window.selectedActionValue === 'delete') {
+                isEditMode = false;
                 loadShiftFromDatabase(false);
+                resetToNormalMode(); // Reset tampilan setelah aksi delete
+                showDeleteIcons(); // Menampilkan ikon delete
+
+                // Pastikan radio button untuk delete tercentang
+                document.querySelector('input[name="action"][value="delete"]').checked = true;
             }
         }
 
+
         function updateEmployeeCardUI(actionValue) {
-            const cards = document.querySelectorAll('.employee-card:not(.shift-card)');
-            cards.forEach(card => {
-                const statusBox = card.querySelector('.status-box');
-                const shiftBox = card.querySelector('.shift-box');
-                const cardActions = card.querySelector('.card-actions'); // Tombol aksi
+    const cards = document.querySelectorAll('.employee-card:not(.shift-card)');
+    cards.forEach(card => {
+        const statusBox = card.querySelector('.status-box');
+        const shiftBox = card.querySelector('.shift-box');
+        const cardActions = card.querySelector('.card-actions');
 
-                if (actionValue === 'edit') {
-                    // Tampilkan input untuk status dan shift
-                    cards.forEach(card => {
-                        const currentStatus = card.querySelector('.status-box')?.textContent.trim().toLowerCase();
-                        const currentShift = card.querySelector('.shift-box')?.textContent.trim();
-                        const currentRole = card.querySelector('.employee-role')?.textContent.trim();
-                        const shiftCards = document.querySelectorAll('.shift-card');
+        // Edit mode
+        if (actionValue === 'edit') {
+            const currentStatus = card.querySelector('.status-box')?.textContent.trim().toLowerCase();
+            const currentShift = card.querySelector('.shift-box')?.textContent.trim();
+            const currentRole = card.querySelector('.employee-role')?.textContent.trim();
 
-                        // Ganti status-box jadi dropdown
-                        const statusBox = card.querySelector('.status-box');
-                        if (statusBox) {
-                            const statusSelect = document.createElement('select');
-                            statusSelect.classList.add('edit-status');
-                            ['active', 'resign'].forEach(option => {
-                                const opt = document.createElement('option');
-                                opt.value = option;
-                                opt.textContent = option.toUpperCase();
-                                if (option === currentStatus) opt.selected = true;
-                                statusSelect.appendChild(opt);
-                            });
-                            statusBox.replaceWith(statusSelect);
-                        }
+            // Ganti status-box menjadi dropdown
+            if (statusBox) {
+                const statusSelect = document.createElement('select');
+                statusSelect.classList.add('edit-status');
+                ['active', 'resign'].forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option.toUpperCase();
+                    if (option === currentStatus) opt.selected = true;
+                    statusSelect.appendChild(opt);
+                });
+                statusBox.replaceWith(statusSelect);
+            }
 
-                        // Ganti shift-box jadi dropdown
-                        const shiftBox = card.querySelector('.shift-box');
-                        if (shiftBox) {
-                            const shiftSelect = document.createElement('select');
-                            shiftSelect.classList.add('edit-shift');
+            // Ganti shift-box menjadi dropdown
+            if (shiftBox) {
+                const shiftSelect = document.createElement('select');
+                shiftSelect.classList.add('edit-shift');
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = '';
+                defaultOpt.textContent = '-';
+                shiftSelect.appendChild(defaultOpt);
+                shiftList.forEach(shift => {
+                    const opt = document.createElement('option');
+                    opt.value = shift.nama_shift;
+                    opt.textContent = shift.nama_shift.toUpperCase();
+                    if (shift.nama_shift.toUpperCase() === currentShift) opt.selected = true;
+                    shiftSelect.appendChild(opt);
+                });
+                shiftBox.replaceWith(shiftSelect);
+            }
 
-                            shiftList.forEach(shift => {
-                                const opt = document.createElement('option');
-                                opt.value = shift.nama_shift;
-                                opt.textContent = shift.nama_shift.toUpperCase();
-                                if (shift.nama_shift.toUpperCase() === currentShift) opt.selected = true;
-                                shiftSelect.appendChild(opt);
-                            });
-                            shiftBox.replaceWith(shiftSelect);
-                        }
-
-                        const rolePara = card.querySelector('.employee-role');
-                        if (rolePara) {
-                            const roleInput = document.createElement('input');
-                            roleInput.type = 'text';
-                            roleInput.classList.add('edit-role');
-                            roleInput.value = currentRole;
-                            rolePara.replaceWith(roleInput);
-                        }
-
-                        shiftCards.forEach(card => {
-                            card.querySelector('.shift-text').style.display = 'none';
-                            card.querySelector('.edit-shift-nama').style.display = 'inline';
-                            card.querySelector('.edit-shift-masuk').style.display = 'inline';
-                            card.querySelector('.edit-shift-keluar').style.display = 'inline';
-                        });
-                    });
-                }
-
-                // Menambahkan atau menghapus ikon sampah berdasarkan pilihan aksi
-                if (actionValue === 'delete') {
-                    if (!cardActions) {
-                        // Jika tidak ada tombol aksi, buat dan tambahkan tombol sampah
-                        const actionsDiv = document.createElement('div');
-                        actionsDiv.classList.add('card-actions');
-                        const deleteIcon = document.createElement('i');
-                        deleteIcon.classList.add('fas', 'fa-trash', 'delete-icon');
-                        // Menambahkan event listener ke delete icon
-                        deleteIcon.addEventListener('click', function() { deleteEmployee(card); });
-                        actionsDiv.appendChild(deleteIcon);
-                        card.appendChild(actionsDiv);
-                    }
-                } else {
-                    // Jika aksi bukan delete, sembunyikan ikon sampah
-                    if (cardActions) {
-                        cardActions.remove();
-                    }
-                }
-            });
+            // Ganti role menjadi input
+            const rolePara = card.querySelector('.employee-role');
+            if (rolePara) {
+                const roleInput = document.createElement('input');
+                roleInput.type = 'text';
+                roleInput.classList.add('edit-role');
+                roleInput.value = currentRole;
+                rolePara.replaceWith(roleInput);
+            }
         }
+        // Mode delete
+        else if (actionValue === 'delete') {
+            if (!cardActions) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('card-actions');
+                const deleteIcon = document.createElement('i');
+                deleteIcon.classList.add('fas', 'fa-trash', 'delete-icon');
+                deleteIcon.addEventListener('click', function() { deleteEmployee(card); });
+                actionsDiv.appendChild(deleteIcon);
+                card.appendChild(actionsDiv);
+            }
+        }
+        // Reset tampilan normal
+        else {
+            if (cardActions) {
+                cardActions.remove();
+            }
+            // Kembalikan status dan shift ke bentuk semula
+            if (statusBox && statusBox.tagName === 'SELECT') {
+                const statusText = statusBox.value.toUpperCase();
+                statusBox.replaceWith(`<div class="status-box">${statusText}</div>`);
+            }
+            if (shiftBox && shiftBox.tagName === 'SELECT') {
+                const shiftText = shiftBox.value.toUpperCase();
+                shiftBox.replaceWith(`<div class="shift-box">${shiftText || '-'}</div>`);
+            }
+            const roleInput = card.querySelector('.edit-role');
+            if (roleInput) {
+                const roleText = roleInput.value;
+                roleInput.replaceWith(`<p class="employee-role">${roleText}</p>`);
+            }
+        }
+    });
+}
+
+function showDeleteIcons() {
+    const cards = document.querySelectorAll('.employee-card');
+    cards.forEach(card => {
+        const cardActions = card.querySelector('.card-actions');
+        if (!cardActions) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.classList.add('card-actions');
+            const deleteIcon = document.createElement('i');
+            deleteIcon.classList.add('fas', 'fa-trash', 'delete-icon');
+            deleteIcon.addEventListener('click', function() { deleteEmployee(card); });
+            actionsDiv.appendChild(deleteIcon);
+            card.appendChild(actionsDiv);
+        }
+    });
+}
 
         function selectCardForDeletion(card) {
-            card.classList.toggle('selected');  // Menambahkan atau menghapus kelas 'selected'
+            card.classList.toggle('selected');
         }
 
         function deleteEmployee(card) {
             const employeeId = card.getAttribute('data-id');
 
             if (employeeId) {
-                // Cek apakah ID valid
-                console.log(`Menghapus pegawai dengan ID: ${employeeId}`);
-
                 fetch(`/pegawai/delete/${employeeId}`, {
                     method: 'DELETE',
                     headers: {
@@ -185,35 +300,28 @@
                     },
                 })
                 .then(response => {
-                    console.log('Response status:', response.status);
                     if (response.ok) {
-                        // Jika penghapusan sukses, hapus card dari tampilan
                         card.remove();
-                        alert("Pegawai berhasil dihapus.");
-
-                        // Setelah penghapusan, reset tampilan
+                        showNotification("Pegawai berhasil dihapus.");
                         resetUIAfterDeletion();
                     } else {
-                        // Menangani kesalahan dari server
-                        alert(`Gagal menghapus pegawai. Status: ${response.status}`);
+                        showNotification(`Gagal menghapus pegawai. Status: ${response.status}`, true);
                     }
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    alert("Terjadi kesalahan saat menghapus pegawai.");
+                    showNotification("Terjadi kesalahan saat menghapus pegawai.", true);
                 });
             } else {
-                alert("ID pegawai tidak ditemukan.");
+                showNotification("ID pegawai tidak ditemukan.", true);
             }
         }
 
         function resetUIAfterDeletion() {
-            // Mengembalikan aksi ke keadaan semula (tanpa tombol sampah)
             const selectedAction = document.querySelector('input[name="action"]:checked');
             if (selectedAction) {
                 selectedAction.checked = false;
             }
-            // Sembunyikan tombol sampah di setiap card pegawai
             const allCards = document.querySelectorAll('.employee-card');
             allCards.forEach(card => {
                 const actionsDiv = card.querySelector('.card-actions');
@@ -221,19 +329,17 @@
                     actionsDiv.remove();
                 }
             });
-            // Reset status tampilan dan shift (misalnya, kembali ke data awal)
-            loadEmployeeData();  // Memanggil kembali data pegawai dari server
         }
 
         function loadEmployeeData() {
-            fetch('/pegawai/all')  // Ubah dengan URL yang sesuai untuk mengambil semua pegawai
+            fetch('/pegawai/all')
                 .then(response => response.json())
                 .then(data => {
                     const employeeListContainer = document.getElementById('employeeList');
-                    employeeListContainer.innerHTML = '';  // Menghapus semua card pegawai yang ada
+                    employeeListContainer.innerHTML = '';
                     data.forEach(employee => {
                         const card = document.createElement('div');
-                        card.classList.add('employee-card');
+                        card.classList.add('employee-card', employee.status === 'active' ? 'active' : 'resign');
                         card.setAttribute('data-id', employee.id);
                         card.innerHTML = `
                             <img src="${employee.photo || 'images/logo.png'}" alt="employee-photo" class="employee-photo">
@@ -244,7 +350,7 @@
                             <div class="status-box ${employee.status === 'active' ? 'status-active' : 'status-resign'}">
                                 ${employee.status.toUpperCase()}
                             </div>
-                            <div class="shift-box">${employee.shift || '-'}</div>
+                            <div class="shift-box">${(employee.shift || '-').toUpperCase()}</div>
                         `;
                         employeeListContainer.appendChild(card);
                     });
@@ -252,229 +358,223 @@
                 .catch(error => console.error('Error loading employee data:', error));
         }
 
-        function loadShiftFromDatabase() {
-            const container = document.getElementById("shiftFormContainer");
-            container.innerHTML = "";
-            container.style.display = "grid";
-            container.className = "shift-container";
+   function loadShiftFromDatabase(showEdit = false) {
+    const container = document.getElementById("shiftFormContainer");
+    container.innerHTML = "";
+    container.style.display = "grid";
+    container.className = "shift-container";
 
-            fetch("/shifts/all")
-                .then(res => res.json())
-                .then(shifts => {
-                    shiftList = shifts;
-                    let html = "";
-                    shifts.forEach(shift => {
-                        html += `
-                            <div class="employee-card shift-card" data-id="${shift.id_shift}">
-                                <div class="shift-info">
-                                    <h2 class="shift-name">
-                                        <span class="shift-text">${shift.nama_shift}</span>
-                                        <input class="edit-shift-nama" type="text" value="${shift.nama_shift}" style="display:none;">
-                                    </h2>
-                                    <p class="shift-time">
-                                        <span class="shift-text">${shift.jam_masuk} - ${shift.jam_keluar}</span>
-                                        <input class="edit-shift-masuk" type="time" value="${shift.jam_masuk}" style="display:none;">
-                                        <input class="edit-shift-keluar" type="time" value="${shift.jam_keluar}" style="display:none;">
-                                    </p>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
-                })
-                .catch(error => console.error("Gagal memuat data shift:", error));
+    fetch("/shifts/all")
+        .then(res => res.json())
+        .then(shifts => {
+            shiftList = shifts;
+            let html = "";
+            shifts.forEach(shift => {
+                html += `
+                    <div class="employee-card shift-card" data-id="${shift.id_shift}">
+                        <div class="shift-info">
+                            <h2 class="shift-name" contenteditable="true">${shift.nama_shift}</h2>
+                            <p class="shift-time" contenteditable="true">${shift.jam_masuk} - ${shift.jam_keluar}</p>
+                        </div>
+                `;
+
+                // Tombol Done untuk menyimpan perubahan
+                html += `
+
+                `;
+
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        })
+        .catch(error => console.error("Gagal memuat data shift:", error));
+}
+
+        function saveShiftChanges(shiftId) {
+            const shiftCard = document.querySelector(`.employee-card[data-id="${shiftId}"]`);
+            const newName = shiftCard.querySelector('.shift-name').textContent.trim();
+            const newTime = shiftCard.querySelector('.shift-time').textContent.trim();
+
+            return fetch(`/shifts/update/${shiftId}`, { // ← tambahkan return
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    nama_shift: newName,
+                    jam_masuk: newTime.split(' - ')[0],
+                    jam_keluar: newTime.split(' - ')[1]
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    shiftCard.querySelector('.shift-name').textContent = newName;
+                    shiftCard.querySelector('.shift-time').textContent = newTime;
+                    return true; // untuk menandai berhasil
+                } else {
+                    throw new Error('Gagal memperbarui shift');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+
+                throw error;
+            });
         }
+
+
+        function processEmployeeUpdates() {
+    return new Promise((resolve, reject) => {
+        const cards = document.querySelectorAll('.employee-card:not(.shift-card)');
+        const updates = [];
+        let updatePromises = [];
+
+        cards.forEach(card => {
+            const id = card.getAttribute('data-id');
+            const status = card.querySelector('.edit-status')?.value;
+            const shift = card.querySelector('.edit-shift')?.value;
+            const role = card.querySelector('.edit-role')?.value;
+
+            if (id && status && shift && role) {
+                updates.push({ id, status, shift, role });
+            }
+        });
+
+        if (updates.length === 0) {
+            showNotification("Tidak ada data yang diubah.", true);
+            resolve();
+            return;
+        }
+
+        updates.forEach(update => {
+            updatePromises.push(
+                fetch(`/pegawai/update/${update.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        status: update.status,
+                        shift: update.shift,
+                        role: update.role
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const card = document.querySelector(`.employee-card[data-id="${update.id}"]`);
+                        card.querySelector('.status-box').textContent = update.status.toUpperCase();
+                        card.querySelector('.shift-box').textContent = update.shift.toUpperCase();
+                        card.querySelector('.employee-role').textContent = update.role;
+                    } else {
+                        showNotification('Gagal memperbarui data pegawai', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+
+                })
+            );
+        });
+
+        Promise.all(updatePromises)
+            .then(() => {
+                resetToNormalMode();
+                resolve(); // penting agar .then di tombol DONE berjalan
+            })
+            .catch(error => {
+                console.error('Error in update promises:', error);
+                reject(error);
+            });
+    });
+}
+
+
 
         // Event Listener radio
         document.querySelectorAll('input[name="action"]').forEach(radio =>
             radio.addEventListener("change", applyAction)
         );
 
+        // Tombol DONE
         document.getElementById("doneButton").onclick = function () {
             const actionValue = document.querySelector('input[name="action"]:checked')?.value;
 
             if (actionValue === 'edit') {
-                const cards = document.querySelectorAll('.employee-card:not(.shift-card)');
-                const updates = [];
+                processEmployeeUpdates()
+                    .then(() => {
+                          const shiftCards = document.querySelectorAll('.shift-card');
+                            const updateShiftPromises = Array.from(shiftCards).map(card => {
+                                const shiftId = card.getAttribute('data-id');
+                                return saveShiftChanges(shiftId);
+                            });
 
-                cards.forEach(card => {
-                    const id = card.getAttribute('data-id');
-                    const status = card.querySelector('.edit-status')?.value;
-                    const shift = card.querySelector('.edit-shift')?.value;
-                    const role = card.querySelector('.edit-role')?.value;
+                            Promise.all(updateShiftPromises)
+                                .then(() => {
+                                    showNotification("Data berhasil diperbarui.");
+                                })
+                                .catch(error => {
+                                    console.error("Error updating shifts:", error);
 
-                    if (id && status && shift) {
-                        updates.push({ id, status, shift, role});
-                    }
-                });
-
-                updates.forEach(emp => {
-                    fetch(`/pegawai/update/${emp.id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            status: emp.status,
-                            shift: emp.shift,
-                            role: emp.role
-                        }),
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Gagal memperbarui data.');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log(`Pegawai ID ${emp.id} berhasil diperbarui.`);
-
-                        // Setelah update berhasil, perbarui semua employee card
-                        const allCards = document.querySelectorAll('.employee-card:not(.shift-card)');
-                        allCards.forEach(card => {
-                            const cardId = card.getAttribute('data-id');
-
-                            if (cardId === emp.id) {
-                                // Perbarui tampilan status
-                                const statusBox = card.querySelector('.status-box');
-                                statusBox.innerHTML = `<span class="${emp.status === 'active' ? 'status-active' : 'status-resign'}">${emp.status.toUpperCase()}</span>`;
-                                statusBox.style.display = 'block';
-
-                                // Perbarui tampilan shift
-                                const shiftBox = card.querySelector('.shift-box');
-                                shiftBox.textContent = emp.shift.toUpperCase();
-                                shiftBox.style.display = 'block';
-
-                                // Sembunyikan input dropdown (edit mode)
-                                if (statusSelect) {
-                                    const newStatusDiv = document.createElement('div');
-                                    newStatusDiv.className = `status-box ${emp.status === 'active' ? 'status-active' : 'status-resign'}`;
-                                    newStatusDiv.textContent = emp.status.toUpperCase();
-                                    statusSelect.replaceWith(newStatusDiv);
-                                }
-
-                                // Ganti dropdown shift menjadi div shift-box
-                                if (shiftSelect) {
-                                    const newShiftDiv = document.createElement('div');
-                                    newShiftDiv.className = 'shift-box';
-                                    newShiftDiv.textContent = emp.shift.toUpperCase();
-                                    shiftSelect.replaceWith(newShiftDiv);
-                                }
-
-                                // Ganti input role menjadi p.role kembali
-                                const roleInput = card.querySelector('.edit-role');
-                                if (roleInput) {
-                                    const newRoleP = document.createElement('p');
-                                    newRoleP.className = 'employee-role';
-                                    newRoleP.textContent = emp.role;
-                                    roleInput.replaceWith(newRoleP);
-                                }
-                            }
-                        });
-
-                        // Sembunyikan semua elemen input di mode edit untuk semua card
-                        const statusInputs = document.querySelectorAll('.edit-status');
-                        const shiftInputs = document.querySelectorAll('.edit-shift');
-                        statusInputs.forEach(input => input.style.display = 'none');
-                        shiftInputs.forEach(input => input.style.display = 'none');
-
-                        // Tampilkan elemen status dan shift yang baru di semua card
-                        const statusElements = document.querySelectorAll('.status-box span');
-                        statusElements.forEach(statusElement => {
-                            statusElement.style.display = 'block';
-                        });
-
-                        const shiftElements = document.querySelectorAll('.shift-box');
-                        shiftElements.forEach(shiftElement => {
-                            shiftElement.style.display = 'block';
-                        });
+                                });
 
                     })
                     .catch(error => {
-                        console.error(`Error update pegawai ID ${emp.id}:`, error);
+                        console.error("Error updating employees:", error);
+                        showNotification("Ada kesalahan saat memperbarui data.", false);
                     });
-                });
-
-                alert('Semua data berhasil diproses.');
-
-                 // Ambil data shift yang diedit
-                 const shiftCards = document.querySelectorAll('.shift-card');
-                shiftCards.forEach(card => {
-                    const id = card.getAttribute('data-id');
-                    const nama_shift = card.querySelector('.edit-shift-nama').value;
-                    const jam_masuk = card.querySelector('.edit-shift-masuk').value;
-                    const jam_keluar = card.querySelector('.edit-shift-keluar').value;
-
-                    fetch(`/shifts/update/${id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ nama_shift, jam_masuk, jam_keluar })
-                    })
-                    .then(res => {
-                        if (!res.ok) throw new Error("Gagal update shift");
-                        return res.json();
-                    })
-                    .then(() => {
-                        console.log(`Shift ${id} berhasil diperbarui`);
-                    })
-                    .catch(err => console.error(err));
-                });
             }
             else if (actionValue === 'delete') {
-            // Ambil semua card yang telah dipilih untuk dihapus
-            const selectedCards = document.querySelectorAll('.employee-card.selected');
-            const deletedIds = [];
+                const selectedCards = document.querySelectorAll('.employee-card.selected');
+                const deletedIds = [];
 
-            selectedCards.forEach(card => {
-                const id = card.getAttribute('data-id');
-                if (id) {
-                    deletedIds.push(id);
-                }
-            });
-
-            if (deletedIds.length > 0) {
-                fetch("/pegawai/delete-multiple", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ ids: deletedIds })
-                }).then(response => {
-                    if (response.ok) {
-                        // Hapus card yang dipilih dari tampilan UI
-                        selectedCards.forEach(card => {
-                            card.remove();
-                        });
-                        alert("Data berhasil dihapus.");
-                    } else {
-                        alert("Gagal menghapus data.");
+                selectedCards.forEach(card => {
+                    const id = card.getAttribute('data-id');
+                    if (id) {
+                        deletedIds.push(id);
                     }
-                }).catch(error => {
-                    console.error('Error:', error);
-                    alert("Terjadi kesalahan saat menghapus data.");
                 });
-            } else {
-                alert("Pilih pegawai yang ingin dihapus.");
-            }
-            }
 
-
+                if (deletedIds.length > 0) {
+                    fetch("/pegawai/delete-multiple", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ ids: deletedIds })
+                    }).then(response => {
+                        if (response.ok) {
+                            selectedCards.forEach(card => {
+                                card.remove();
+                            });
+                            showNotification("Data berhasil dihapus.");
+                        } else {
+                            showNotification("Gagal menghapus data.", true);
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        showNotification("Terjadi kesalahan saat menghapus data.", true);
+                    });
+                } else {
+                    showNotification("Pilih pegawai yang ingin dihapus.", true);
+                }
+            }
         };
 
         // Tombol CANCEL
         document.getElementById("cancelButton").onclick = function () {
-            location.reload();
+            resetToNormalMode();
         };
 
         // Inisialisasi saat halaman load
         window.addEventListener('DOMContentLoaded', () => {
             document.getElementById("mainWrapper").style.display = "flex";
             loadShiftFromDatabase();
+            loadEmployeeData();
         });
     </script>
 
