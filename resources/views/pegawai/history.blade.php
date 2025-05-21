@@ -9,9 +9,6 @@
 <body>
 
     <div class="header">
-        <a href="{{ route('pegawai.loginPg') }}">
-            <img src="{{ asset('images/logout.png') }}" alt="Logout" class="back-btn">
-        </a>
         <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
     </div>
 
@@ -19,48 +16,34 @@
         <table>
             <thead>
                 <tr>
-                    <th>No.</th> <!-- Nomor urut -->
                     <th>TANGGAL, WAKTU</th>
-                    <th>KEHADIRAN</th>
-                    <th>ALASAN</th>
+                    <th>KETERANGAN</th>
                     <th>STATUS</th>
-                    <th>KETERLAMBATAN</th>
+                    <th>ALASAN / KETERLAMBATAN</th>
                 </tr>
             </thead>
             <tbody>
-                @php $counter = 1; @endphp <!-- Inisialisasi counter untuk nomor urut -->
+
+                {{-- Izin --}}
                 @foreach($izin as $item)
                     <tr>
-                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>Izin</td>
-                        <td>{{ $item->alasan }}</td>
-                        <td>{{ ucfirst($item->status) }}</td>
-                        <td>-</td>
+                        <td>Izin </td> <!-- Menampilkan jenis Izin -->
+                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
+                        <td>{{ $item->alasan ?? '-' }}</td> <!-- Menampilkan alasan -->
                     </tr>
                 @endforeach
 
+                {{-- Cuti --}}
                 @foreach($cuti as $item)
                     <tr>
-                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
                         <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}</td>
-                        <td>Cuti</td>
-                        <td>{{ $item->alasan }}</td>
-                        <td>{{ ucfirst($item->status) }}</td>
-                        <td>-</td>
+                        <td>Cuti</td> <!-- Menampilkan jenis Cuti -->
+                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
+                        <td>{{ $item->alasan ?? '-' }}</td> <!-- Menampilkan alasan -->
                     </tr>
                 @endforeach
 
-                {{-- @foreach($hadir as $item)
-                    <tr>
-                        <td>{{ $counter++ }}</td> <!-- Nomor urut -->
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>Hadir</td>
-                        <td>{{ $item->alasan }}</td> <!-- Menampilkan alasan -->
-                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
-                        <td>{{ $item->keterlambatan ?? '-' }}</td> <!-- Menampilkan keterlambatan jika ada -->
-                    </tr>
-                @endforeach --}}
             </tbody>
         </table>
     </div>

@@ -18,5 +18,5 @@ class PegawaiHistoryController extends Controller
         return view('pegawai.history', compact('izin', 'cuti'));
     }
 
-    
+
 }

@@ -213,6 +213,8 @@ input {
 .popup-buttons {
     display: flex;
     justify-content: space-between;
+    align-items: center;  /* Menyelaraskan tombol secara vertikal */
+    width: 100%;
 }
 
 .btn-done {
@@ -226,7 +228,7 @@ input {
     border-radius: 10px;
     cursor: pointer;
     flex: 1;
-    margin-right: 5px;
+    margin-left: 45px;
 }
 
 .btn-cancel {
@@ -250,6 +252,26 @@ input {
 .btn-cancel:hover {
     background: #B0B0B0;
 }
+
+.btn-verify {
+    background: #4CAF50;  /* Hijau standar */
+    color: white;
+    border: none;
+    font-size: 16px;
+    font-family: "Caprasimo", sans-serif;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex: 1;
+    margin-left: 80px;
+    transition: background 0.3s ease; /* Menambahkan efek transisi */
+}
+
+.btn-verify:hover {
+    background: #45a049;  /* Sedikit lebih gelap saat hover */
+}
+
          .password-link {
             text-align: center;
             margin-top: 10px;

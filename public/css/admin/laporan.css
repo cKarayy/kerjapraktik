@@ -146,6 +146,7 @@ body {
     border: 1px solid black;
     padding: 5px;
     text-align: center;
+    white-space: nowrap;
 }
 
 .table th {
@@ -163,7 +164,8 @@ body {
     align-items: center;
     gap: 10px;
     margin-top: 150px;
-    transform: translateX(100px);
+    justify-content: flex-end;
+    margin-left: 850px;
 }
 
 .export-btn {
@@ -289,3 +291,26 @@ body {
     font-family: "Chau";
 }
 
+/* Styling untuk tombol Setujui dan Tolak */
+form button.btn-accept {
+    background-color: #4CAF50; /* hijau */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+form button.btn-refuse {
+    background-color: #f44336; /* merah */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+form button.btn-accept:hover,
+form button.btn-refuse:hover {
+    opacity: 0.8;
+}

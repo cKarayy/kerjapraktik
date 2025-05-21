@@ -18,7 +18,7 @@
         <h1>LOGIN</h1>
         <div class="line"></div>
 
-        <form action="{{ route('pegawai.login.submit') }}" method="POST">
+        <form id="loginForm" action="{{ route('pegawai.login.submit') }}" method="POST">
             @csrf
             <div class="input-container">
                 <label class="label-text" for="full_name">Nama Lengkap</label>
@@ -39,33 +39,36 @@
                 </div>
             @endif
 
-            <button class="login-btn">LOGIN</button>
+            <button type="submit" class="login-btn">LOGIN</button>
         </form>
 
-        <!-- Link untuk membuka popup Ubah Password -->
-        <div class="password-link" id="myBtn">RESET PASSWORD</div>
+        <div class="password-link" id="myBtn">Lupa Password?</div>
     </div>
 </div>
 
-<!-- Popup untuk ubah password -->
+<!-- Popup untuk reset password -->
 <div id="popup-ubah-password" class="popup">
     <div class="popup-content">
         <h3>RESET PASSWORD</h3>
-        <form id="changePasswordForm">
+        <form method="POST" action="{{ route('pegawai.resetPassword') }}">
             @csrf
-            @method('PUT')
+            <!-- Kolom Nama Lengkap -->
             <div class="password-container">
-                <input type="password" id="new_password" name="new_password" placeholder="Password Baru" required>
-                <i id="toggleEyeNew" class="fa-solid fa-eye-slash" onclick="togglePassword('new_password', 'toggleEyeNew')"></i>
-            </div>
-            <div class="password-container">
-                <input type="password" id="confirm_password" name="confirm_password" placeholder="Konfirmasi Password" required>
-                <i id="toggleEyeConfirm" class="fa-solid fa-eye-slash" onclick="togglePassword('confirm_password', 'toggleEyeConfirm')"></i>
+                <input type="text" id="reset_full_name" name="reset_full_name" placeholder="Nama Lengkap" required>
             </div>
 
-            <div id="errorMessage" style="color: red;"></div>
+            <button type="button" class="btn-verify" id="verifyUserBtn">VERIFIKASI</button>
 
-            <div class="popup-buttons">
+            <!-- Form Password Baru (Tersembunyi Awalnya) -->
+            <div id="passwordForm" style="display:none;">
+                <div class="password-container">
+                    <input type="password" id="new_password" name="new_password" placeholder="Password Baru" required>
+                    <i id="toggleEyeNew" class="fa-solid fa-eye-slash" onclick="togglePassword('new_password', 'toggleEyeNew')"></i>
+                </div>
+                <div class="password-container">
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Konfirmasi Password" required>
+                    <i id="toggleEyeConfirm" class="fa-solid fa-eye-slash" onclick="togglePassword('confirm_password', 'toggleEyeConfirm')"></i>
+                </div>
                 <button type="submit" class="btn-done">DONE</button>
                 <button type="button" class="btn-cancel" onclick="closePopup('popup-ubah-password')">CANCEL</button>
             </div>
@@ -73,11 +76,12 @@
     </div>
 </div>
 
-    <!-- Notifikasi -->
-    <div id="notifikasi" class="notifikasi">
-        <img id="notifikasi-gambar" src="" alt="Notifikasi">
-        <p id="notifikasi-text"></p>
-    </div>
+
+<!-- Notifikasi -->
+<div id="notifikasi" class="notifikasi">
+    <img id="notifikasi-gambar" src="" alt="Notifikasi">
+    <p id="notifikasi-text"></p>
+</div>
 
 <script>
     // Fungsi toggle password
@@ -111,34 +115,106 @@
         popup.style.display = "none";
     }
 
-    // Menangani form pengubahan password menggunakan AJAX
-     document.getElementById('changePasswordForm').onsubmit = function(e) {
-        e.preventDefault();  // Menghindari pengiriman form secara normal
+    // Menangani submit form login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-        var formData = new FormData(this);
+        const full_name = document.getElementById('full_name').value;
+        const password = document.getElementById('password').value;
 
-        // Mengirim data form ke server menggunakan AJAX
-        fetch("{{ route('pegawai.updatePassword') }}", {
-            method: 'PUT',
-            body: formData
-        })
-        .then(response => response.json())
+        fetch("/pegawai/login", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                full_name: full_name,
+                password: password
+            })
+        }).then(response => response.json())
         .then(data => {
-            if (data.success) {
-                // Tampilkan sukses dan tutup popup
-                showNotification('Password berhasil diperbarui!', 'success');
-                closePopup('popup-ubah-password');  // Tutup popup setelah berhasil
+            console.log("Login Response:", data);  // Debugging response
+            if (data.status === 'success') {
+                // Redirect user to the page after login
+                window.location.href = data.redirectUrl;  // This will redirect the user
             } else {
-                // Tampilkan pesan error jika ada
-                document.getElementById('errorMessage').innerText = data.message;
-                showNotification('Gagal memperbarui password.', 'error');
+                showNotification(data.message, 'error');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Terjadi kesalahan, coba lagi nanti.', 'error');
+        }).catch(error => {
+            console.error("Login Error:", error);
+            showNotification('Terjadi kesalahan saat login.', 'error');
         });
-    };
+    });
+
+
+    // Verifikasi Nama Lengkap dan Tampilkan Form Password Baru
+    document.getElementById('verifyUserBtn').addEventListener('click', function() {
+        const resetFullName = document.getElementById('reset_full_name').value;
+
+        // Kirimkan permintaan verifikasi ke server untuk mengecek apakah pengguna ada
+        fetch("/pegawai/verify-user", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                full_name: resetFullName
+            })
+        }).then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Menyembunyikan form nama lengkap dan tombol verifikasi setelah verifikasi berhasil
+                document.getElementById('reset_full_name').disabled = true;  // Menonaktifkan input nama lengkap
+                document.getElementById('verifyUserBtn').style.display = 'none';  // Menyembunyikan tombol verifikasi
+
+                // Menampilkan form untuk memasukkan password baru
+                document.getElementById('passwordForm').style.display = "block";
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            showNotification('Terjadi kesalahan, coba lagi.', 'error');
+        });
+    });
+
+    // Menangani submit form reset password
+    document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const new_password = document.getElementById('new_password').value;
+        const confirm_password = document.getElementById('confirm_password').value;
+
+        fetch("/pegawai/reset-password", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                new_password: new_password,
+                confirm_password: confirm_password
+            })
+        }).then(response => response.json())
+        .then(data => {
+                console.log(data.userInfo); // Menampilkan informasi login pengguna
+                console.log('Status:', data.status);
+                console.log('Message:', data.message);
+
+            if (data.status === 'success') {
+                showNotification(data.message, 'success');
+                closePopup('popup-ubah-password');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            showNotification('Terjadi kesalahan, coba lagi.', 'error');
+        });
+    });
 
     // Menampilkan notifikasi
     function showNotification(message, type) {
@@ -148,22 +224,19 @@
 
         notifikasiText.textContent = message;
 
-        // Menentukan gambar dan warna berdasarkan tipe
         if (type === 'success') {
             notifikasiImage.src = "{{ asset('images/success.png') }}";
-            notifikasi.style.backgroundColor = "#4CAF50";  
+            notifikasi.style.backgroundColor = "#4CAF50";
         } else {
             notifikasiImage.src = "{{ asset('images/failed.png') }}";
             notifikasi.style.backgroundColor = "#800000";
         }
 
-        // Tampilkan notifikasi
         notifikasi.style.display = "block";
 
-        // Sembunyikan setelah beberapa detik
         setTimeout(function() {
             notifikasi.style.display = "none";
-        }, 3000);  // Notifikasi akan hilang setelah 3 detik
+        }, 3000);
     }
 </script>
 

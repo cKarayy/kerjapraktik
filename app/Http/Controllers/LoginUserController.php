@@ -5,125 +5,135 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Admin;
+use App\Models\Penyelia;
 use App\Models\Employee;
 
 class LoginUserController extends Controller
 {
-    // Menampilkan halaman login
     public function showLoginForm()
     {
         return view('pegawai.loginPg');
     }
 
-    // Proses login
     public function login(Request $request)
     {
-        // Validasi input
         $request->validate([
             'full_name' => 'required|string',
             'password' => 'required',
         ]);
 
-        // Mencari pegawai berdasarkan nama lengkap
-        $pegawai = Employee::where('nama_lengkap', $request->full_name)->first();
-
-        // Jika pegawai ditemukan dan password cocok
-        if ($pegawai && Hash::check($request->password, $pegawai->password)) {
-            // Melakukan login dengan guard karyawans
-            Auth::guard('web')->login($pegawai);
-
-            // Cek role dan arahkan ke dashboard sesuai role
-            if ($pegawai->role == 'admin') {
-                return redirect()->route('admin.dashboard');
-            } elseif ($pegawai->role == 'penyelia') {
-                return redirect()->route('dashboard_py');
-            } else {
-                return redirect()->route('pegawai.home');
-            }
+        // Admin
+        $admin = Admin::where('nama_lengkap', $request->full_name)->first();
+        if ($admin && Hash::check($request->password, $admin->password)) {
+            Auth::guard('admin')->login($admin);
+            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('admin.dashboard')]);
         }
 
-        // Jika login gagal
-        return redirect()->back()->with('error', 'Nama lengkap atau password salah.');
+        // Penyelia
+        $penyelia = Penyelia::where('nama_lengkap', $request->full_name)->first();
+        if ($penyelia && Hash::check($request->password, $penyelia->password)) {
+            Auth::guard('penyelia')->login($penyelia);
+            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('dashboard_py')]);
+        }
+
+        // Pegawai
+        $pegawai = Employee::where('nama_lengkap', $request->full_name)->first();
+        if ($pegawai && Hash::check($request->password, $pegawai->password)) {
+            Auth::guard('karyawans')->login($pegawai);
+            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('pegawai.home')]);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Nama lengkap atau password salah.']);
     }
 
-    // Halaman utama setelah login untuk Pegawai
     public function home()
     {
-        // Cek jika pegawai sudah login
-        if (!Auth::guard('web')->check()) {
-            return redirect()->route('pegawai.loginPg')->with('error', 'Silakan login terlebih dahulu');
+        // Cek jenis pengguna yang login dan arahkan ke dashboard yang sesuai
+        if (auth('admin')->check()) {
+            // Admin
+            $admin = auth('admin')->user();
+            return redirect()->route('admin.dashboard');
+        } elseif (auth('penyelia')->check()) {
+            // Penyelia
+            $penyelia = auth('penyelia')->user();
+            return redirect()->route('dashboard_py');
+        } elseif (auth('karyawans')->check()) {
+            // Pegawai
+            $pegawai = auth('karyawans')->user();
+            return view('pegawai.home', compact('pegawai'));
         }
 
-        // Ambil data pegawai yang login
-        $pegawai = Auth::guard('web')->user(); // Memastikan menggunakan guard 'web' untuk mendapatkan user
-
-        // Kirimkan data pegawai ke view
-        return view('pegawai.home', compact('pegawai'));
-
-        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate');
-        $response->header('Pragma', 'no-cache');
-        $response->header('Expires', '0');
+        // Jika tidak ada yang login, redirect ke halaman login
+        return redirect()->route('pegawai.loginPg');
     }
 
-       public function showChangePasswordForm()
+    public function logout(Request $request)
     {
-        return view('pegawai.changePassword');
+        Auth::guard('admin')->logout();
+        Auth::guard('penyelia')->logout();
+        Auth::guard('karyawans')->logout();
+        session()->flush(); // Menghapus semua data sesi
+
+        return redirect()->route('pegawai.loginPg');
     }
 
-    public function updatePassword(Request $request)
+
+   public function verifyUser(Request $request)
     {
-        // Validasi input
         $request->validate([
-            'current_password' => 'required',
-            'new_password' => 'required|min:8',
+            'full_name' => 'required|string',
+        ]);
+
+        // Mencari pengguna di ketiga model dalam satu query
+        $user = Admin::where('nama_lengkap', $request->full_name)
+            ->first() ?: Penyelia::where('nama_lengkap', $request->full_name)
+            ->first() ?: Employee::where('nama_lengkap', $request->full_name)
+            ->first();
+
+        // Jika pengguna tidak ditemukan
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Pengguna ditemukan, silakan masukkan password baru.']);
+    }
+
+   public function updatePassword(Request $request)
+    {
+        // Validasi input password
+        $request->validate([
+            'new_password' => 'required|min:6',
             'confirm_password' => 'required|same:new_password',
         ]);
 
-        // Mendapatkan pengguna yang sedang login
-        $user = Auth::guard('karyawans')->user();  // Pastikan Anda menggunakan guard yang tepat
+        // Mendefinisikan variabel user
+        $user = null;
 
-        // Cek apakah password lama yang dimasukkan cocok dengan password di database
-        if (!Hash::check($request->current_password, $user->password)) {
-            return response()->json(['success' => false, 'message' => 'Password lama tidak cocok.']);
+        // Periksa apakah pengguna login dengan guard yang sesuai
+        if (auth('admin')->check()) {
+            $user = auth('admin')->user();  // Mendapatkan pengguna admin
+        } elseif (auth('penyelia')->check()) {
+            $user = auth('penyelia')->user();  // Mendapatkan pengguna penyelia
+        } elseif (auth('karyawans')->check()) {
+            $user = auth('karyawans')->user();  // Mendapatkan pengguna pegawai
         }
 
-        // Update password dengan password baru
+        // Jika tidak ada pengguna yang login, kembalikan error
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'Pengguna tidak terautentikasi']);
+        }
+
+        // Debugging: periksa apakah $user adalah model yang benar
+        dd($request->new_password, $user->password);
+        // Update password pengguna
         $user->password = Hash::make($request->new_password);
+        dd($user->getOriginal('password'), $user->password);
+        $user->save();  // Simpan perubahan password
 
-        // Simpan perubahan ke database
-        if ($user->save()) {
-            return response()->json(['success' => true, 'message' => 'Password berhasil diperbarui!']);
-        } else {
-            return response()->json(['success' => false, 'message' => 'Gagal memperbarui password.']);
-        }
+        return response()->json(['status' => 'success', 'message' => 'Password berhasil diperbarui']);
     }
 
-
-    // Logout
-    public function logout(Request $request)
-    {
-        // Logout pegawai
-        Auth::guard('web')->logout();
-        session()->flush();  // Menghapus session setelah logout
-
-        // Redirect ke halaman login dengan status logout
-        return redirect()->route('pegawai.loginPg')->with('loggedOut', true);
-    }
-
-      public function adminDashboard()
-    {
-        return view('admin.dashboard');
-    }
-
-    public function penyeliaDashboard()
-    {
-        return view('dashboard_py');
-    }
-
-    public function pegawaiDashboard()
-    {
-        return view('pegawai.home');
-    }
 
 
 }

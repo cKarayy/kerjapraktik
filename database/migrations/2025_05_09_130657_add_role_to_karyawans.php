@@ -12,7 +12,6 @@ return new class extends Migration
     public function up()
     {
         Schema::table('karyawans', function (Blueprint $table) {
-            $table->string('username')->unique()->nullable()->before('created_at');
             $table->string('role')->default('pegawai')->before('created_at');
         });
     }
@@ -23,7 +22,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('karyawans', function (Blueprint $table) {
-            $table->dropColumn('username');
             $table->dropColumn('role');
         });
     }

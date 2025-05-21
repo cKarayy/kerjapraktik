@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\LoginController;
 use App\Http\Controllers\QRController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ShiftController;
@@ -14,8 +13,6 @@ use App\Models\Employee;
 use App\Http\Controllers\PegawaiHistoryController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\PenyeliaController;
-use App\Http\Middleware\NoCacheMiddleware;
 use App\Models\Absensi;
 
 //admin
@@ -23,21 +20,11 @@ Route::get('/', function () {
     return view('admin.welcome');
 });
 
-Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+Route::get('/penyelia/laporan', action: [LaporanController::class, 'index'])->name('penyelia.laporanPy');
 
 Route::get('/admin/laporan', [AdminController::class, 'showLaporan'])->name('admin.laporan');
 
 Route::get('/admin/export/laporan', [AdminController::class, 'export'])->name('admin.export.laporan');
-
-// Route::middleware(['auth:admin'])->group(function () {
-//     Route::get('/admin/dashboard', [AdminController::class, 'admDashboard'])->name('admin.dashboard');
-//     Route::get('/penyelia/dashboard', [AdminController::class, 'penyeliaDashboard'])->name('dashboard_py');
-// });
-
-// Default login route (fallback jika auth gagal)
-Route::get('/login', function () {
-    return redirect()->route(route: 'pegawai.loginPg');
-})->name('login');
 
 Route::get('/qrcode', [QRController::class, 'showQRCode'])->name('qrcode');
 
@@ -82,10 +69,11 @@ Route::get('/data_py', function () {
     return view('penyelia.dataPenyelia', compact('employees'));
 })->name('data_py');
 
-Route::get('/penyelia/laporan', [PenyeliaController::class, 'showLaporan'])->name('penyelia.laporanPy');
-
 Route::middleware(['auth:penyelia'])->post('/izin/approve/{id}', [IzinController::class, 'approve']);
 Route::middleware(['auth:penyelia'])->post('/izin/reject/{id}', [IzinController::class, 'reject']);
+
+Route::post('/penyelia/updateStatus/{id}', [LaporanController::class, 'updateStatus'])->name('penyelia.updateStatus');
+
 
 Route::prefix('pegawai')->group(function () {
     Route::get('/all', [EmployeeController::class, 'index']); // Menampilkan semua pegawai
@@ -100,34 +88,18 @@ Route::prefix('shifts')->group(function () {
     Route::post('/delete-multiple', [ShiftController::class, 'delete']); // Menghapus banyak shift
 });
 
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
-})->name('admin.dashboard')->middleware('auth');
-
-Route::get('/penyelia/dashboard', function () {
-    return view('penyelia.db');
-})->name('dashboard_py')->middleware('auth');
-
-Route::get('/pegawai/home', function () {
-    return view('pegawai.home');
-})->name('pegawai.home')->middleware('auth');
+Route::post('/pegawai/verify-user', [LoginUserController::class, 'verifyUser'])->name('pegawai.verifyUser');
+Route::middleware(['auth:admin', 'auth:penyelia', 'auth:karyawans'])->post('/update-password', [LoginUserController::class, 'updatePassword'])->name('pegawai.resetPassword');
 
 //pegawai
 Route::get('/pegawai/register', function () {
     return view('pegawai.registerPg');
 })->name('pegawai.register');
 
+//pegawai
 Route::get('/pegawai/login', function () {
     return view('pegawai.loginPg');
 })->name('pegawai.loginPg');
-
-Route::get('/pegawai/ubah-password', [LoginUserController::class, 'showChangePasswordForm'])->name('pegawai.changePassword');
-Route::put('/pegawai/ubah-password', [LoginUserController::class, 'updatePassword'])->name('pegawai.updatePassword');
-
-Route::middleware([NoCacheMiddleware::class])->group(function () {
-    Route::get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
-    Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
-});
 
 Route::get('/register-karyawan', [EmployeeController::class, 'create'])->name('karyawans.create');
 
@@ -137,6 +109,17 @@ Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->na
 
 Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
 Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
+
+Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
+
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'admDashboard'])->name('admin.dashboard');
+});
+
+Route::middleware(['auth:penyelia'])->group(function () {
+    Route::get('/penyelia/dashboard', [AdminController::class, 'penyeliaDashboard'])->name('dashboard_py');
+});
+
 
 Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
 

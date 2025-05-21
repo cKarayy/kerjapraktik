@@ -24,10 +24,11 @@
                 <div class="dropdown-container" onclick="toggleDropdown()">
                     <img src="{{ asset('images/dd.png') }}" alt="Dropdown">
                     <div class="dropdown" id="dropdownMenu">
-                        <div class="option" onclick="selectOption(this)">IZIN</div>
-                        <div class="option" onclick="selectOption(this)">CUTI</div>
+                        <div class="option" onclick="selectOption(this, 'cuti')">CUTI</div>
+                        <div class="option" onclick="selectOption(this, 'izin')">IZIN</div>
                     </div>
                 </div>
+                <input type="hidden" name="keterangan" id="keterangan" value="{{ old('keterangan', '') }}">
 
                 <label class="custom-radio">
                     <input type="radio" name="shift" value="pagi" {{ old('shift') == 'pagi' ? 'checked' : '' }}>
@@ -51,64 +52,140 @@
         </div>
     </form>
 
-    <!-- TABEL KEHADIRAN -->
-    <div class="table-container">
-        <table class="table">
-            <thead>
+    <!-- TABEL ABSENSI -->
+<div class="table-container" id="absensi-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>TANGGAL</th>
+                <th>NAMA LENGKAP</th>
+                <th>KEHADIRAN</th>
+                <th>KETERANGAN</th>
+                <th>KETERLAMBATAN</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{-- @foreach($absensi as $item)
                 <tr>
-                    <th>TANGGAL</th>
-                    <th>NAMA LENGKAP</th>
-                    <th>KEHADIRAN</th>
-                    <th>KETERANGAN</th>
-                    <th>KETERLAMBATAN</th>
-                    <th>STATUS PERSETUJUAN</th> <!-- Kolom untuk status persetujuan -->
+                    <td>{{ $item->tanggal_scan }}</td>
+                    <td>{{ $item->karyawan->nama_lengkap ?? '-'}}</td>
+                    <td>{{ $item->kehadiran }}</td>
+                    <td>{{ $item->shift }}</td>
+                    <td>{{ $item->lateness }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach($laporan as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>{{ $item->karyawan->nama }}</td> <!-- Menampilkan nama pegawai -->
-                        <td>{{ $item->kehadiran ?? 'Cuti/Izin' }}</td>
-                        <td>{{ $item->shift ?? $item->alasan }}</td>
-                        <td>{{ $item->lateness ?? '-' }}</td>
-                        <td>
-                            @if($item instanceof \App\Models\Cuti || $item instanceof \App\Models\Izin)
-                                <form action="{{ route('penyelia.persetujuan', $item->id) }}" method="POST">
-                                    @csrf
-                                    <select name="status_persetujuan" onchange="this.form.submit()">
-                                        <option value="Pending" {{ $item->status == 'Pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="Disetujui" {{ $item->status == 'Disetujui' ? 'selected' : '' }}>Disetujui</option>
-                                        <option value="Ditolak" {{ $item->status == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
-                                    </select>
-                                </form>
-                            @else
-                                -
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+            @endforeach --}}
+        </tbody>
+    </table>
+</div>
 
-        <div class="export-buttons">
-            <button class="export-btn">
-                <img src="{{ asset('images/excel.png') }}" alt="Excel">
-                <span>EXPORT TO EXCEL</span>
-            </button>
-            <button class="export-btn">
-                <img src="{{ asset('images/gambar_pdf.png') }}" alt="PDF">
-                <span>EXPORT TO PDF</span>
-            </button>
-        </div>
+<!-- TABEL CUTI (Hanya tampil jika 'cuti' dipilih di dropdown) -->
+<div id="cuti-table" class="table-container" style="display:none;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>TANGGAL MULAI</th>
+                <th>TANGGAL SELESAI</th>
+                <th>NAMA LENGKAP</th>
+                <th>ALASAN</th>
+                <th>STATUS</th>
+                <th>AKSI</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($cuti as $item)
+                <tr>
+                    <td>{{ $item->tanggal_mulai }}</td>
+                    <td>{{ $item->tanggal_selesai }}</td>
+                    <td>{{ $item->karyawan->nama_lengkap ?? 'N/A' }}</td>
+                    <td>{{ $item->alasan }}</td>
+                    <td>{{ ucfirst($item->status) }}</td>
+                    <td>
+                        @if($item->status == 'menunggu')
+                            <form method="POST" action="{{ route('penyelia.updateStatus', $item->id) }}">
+                                @csrf
+                                <input type="hidden" name="jenis" value="cuti">
+                                <button type="submit" name="status" value="disetujui" class="btn-accept">ACCEPT</button>
+                                <button type="submit" name="status" value="ditolak" class="btn-refuse">REFUSE</button>
+                            </form>
+                            @else
+                        -
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6">Tidak ada data cuti untuk bulan ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+
+<!-- TABEL IZIN (Hanya tampil jika 'izin' dipilih di dropdown) -->
+<div id="izin-table" class="table-container" style="display:none;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>TANGGAL</th>
+                <th>NAMA LENGKAP</th>
+                <th>ALASAN</th>
+                <th>STATUS</th>
+                <th>AKSI</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($izin as $item)
+                <tr>
+                    <td>{{ $item->tanggal }}</td>
+                    <td>{{ $item->karyawan->nama_lengkap ?? 'N/A' }}</td>
+                    <td>{{ $item->alasan }}</td>
+                    <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status yang diambil dari database -->
+                    <td>
+                        @if($item->status == 'menunggu') <!-- Tampilkan tombol hanya jika status "menunggu" -->
+                            <form method="POST" action="{{ route('penyelia.updateStatus', $item->id) }}">
+                                @csrf
+                                <input type="hidden" name="jenis" value="izin">
+                                <button type="submit" name="status" value="disetujui" class="btn-accept">ACCEPT</button>
+                                <button type="submit" name="status" value="ditolak" class="btn-refuse">REFUSE</button>
+                            </form>
+                        @else
+                        -
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5">Tidak ada data izin untuk bulan ini.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+    <!-- TOMBOL EXPORT -->
+    <div class="export-buttons">
+        <button class="export-btn">
+            <img src="{{ asset('images/excel.png') }}" alt="Excel">
+            <span>EXPORT TO EXCEL</span>
+        </button>
+        <button class="export-btn">
+            <img src="{{ asset('images/gambar_pdf.png') }}" alt="PDF">
+            <span>EXPORT TO PDF</span>
+        </button>
     </div>
 
-<script> 
-    function toggleDropdown() {
+</div>
+
+<script>
+  function toggleDropdown() {
         document.getElementById("dropdownMenu").classList.toggle("show");
     }
 
-    function selectOption(selectedElement) {
+    function selectOption(selectedElement, keterangan) {
+        // Set nilai hidden input sesuai pilihan
+        document.getElementById('keterangan').value = keterangan;
+
         // Reset semua opsi ke warna default
         document.querySelectorAll(".option").forEach(option => {
             option.classList.remove("selected");
@@ -119,6 +196,18 @@
 
         // Tutup dropdown setelah memilih
         document.getElementById("dropdownMenu").classList.remove("show");
+
+        // Sembunyikan tabel absensi
+        document.getElementById('absensi-table').style.display = 'none';
+
+        // Tampilkan tabel berdasarkan pilihan
+        if (keterangan == 'cuti') {
+            document.getElementById('cuti-table').style.display = 'block';
+            document.getElementById('izin-table').style.display = 'none';
+        } else if (keterangan == 'izin') {
+            document.getElementById('cuti-table').style.display = 'none';
+            document.getElementById('izin-table').style.display = 'block';
+        }
     }
 
     // Tutup dropdown jika klik di luar area dropdown
@@ -130,7 +219,32 @@
             dropdownMenu.classList.remove("show");
         }
     });
+
+    function selectOption(selectedElement, keterangan) {
+        document.getElementById('keterangan').value = keterangan;
+
+        document.querySelectorAll(".option").forEach(option => {
+            option.classList.remove("selected");
+        });
+
+        selectedElement.classList.add("selected");
+
+        document.getElementById("dropdownMenu").classList.remove("show");
+
+        // Menyembunyikan tabel absensi dan menampilkan tabel cuti atau izin
+        document.getElementById('absensi-table').style.display = 'none';
+        if (keterangan == 'cuti') {
+            document.getElementById('cuti-table').style.display = 'block';
+            document.getElementById('izin-table').style.display = 'none';
+        } else if (keterangan == 'izin') {
+            document.getElementById('cuti-table').style.display = 'none';
+            document.getElementById('izin-table').style.display = 'block';
+        }
+    }
+
 </script>
+
+
 
 </body>
 </html>

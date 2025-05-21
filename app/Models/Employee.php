@@ -11,6 +11,7 @@ class Employee extends Authenticatable
     protected $primaryKey = 'id_karyawan';
     protected $fillable = ['id_shift', 'nama_lengkap', 'jabatan', 'password', 'status', 'username', 'role'];
     protected $hidden = ['password'];
+     protected $casts = ['password' => 'hashed'];
 
     protected static function boot()
     {

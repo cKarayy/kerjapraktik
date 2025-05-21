@@ -11,12 +11,17 @@ class Admin extends Authenticatable
 
     protected $primaryKey = 'id_admin';
 
-     protected $fillable = ['nama_lengkap', 'password_admin'];
+     protected $fillable = ['nama_lengkap', 'password'];
 
     protected $hidden = ['password'];
 
     public function getAuthPassword()
     {
-        return $this->password_admin;
+        return $this->password;
+    }
+
+    public function setPasswordAdminAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
     }
 }

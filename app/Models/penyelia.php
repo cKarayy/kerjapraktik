@@ -7,12 +7,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class Penyelia extends Authenticatable
 {
     protected $primaryKey = 'id_penyelia';
-    protected $fillable = ['nama_lengkap', 'password_penyelia'];
-    protected $hidden = ['password_penyelia'];
+    protected $fillable = ['nama_lengkap', 'password'];
+    protected $hidden = ['password'];
 
     public function getAuthPassword()
     {
-        return $this->password_penyelia;
+        return $this->sendPasswordResetNotification;
+    }
+
+     public function setPasswordPenyeliaAttribute($value)
+    {
+        $this->attributes['password'] = bcrypt($value);
     }
 
 }

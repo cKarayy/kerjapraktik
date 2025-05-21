@@ -36,11 +36,26 @@ return [
     */
 
     'guards' => [
-    'web' => [
-        'driver' => 'session',
-        'provider' => 'karyawans',
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin',
+        ],
+
+        'penyelia' => [
+            'driver' => 'session',
+            'provider' => 'penyelias',
+        ],
+
+        'karyawans' => [
+            'driver' => 'session',
+            'provider' => 'karyawans',
+        ],
     ],
-],
 
 
     /*
@@ -60,12 +75,28 @@ return [
     |
     */
 
-    'providers' => [
+   'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\User::class,
+        ],
+
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
+
+        'penyelias' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Penyelia::class,
+        ],
+
         'karyawans' => [
             'driver' => 'eloquent',
             'model' => App\Models\Employee::class,
         ],
     ],
+
 
     /*
     |--------------------------------------------------------------------------

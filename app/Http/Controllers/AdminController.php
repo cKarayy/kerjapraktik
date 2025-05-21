@@ -17,43 +17,6 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AdminController extends Controller
 {
-    // Fungsi untuk mendaftarkan admin atau penyelia
-    // Tampilkan form register
-    public function showRegister()
-    {
-        return view('admin.register');
-    }
-
-    // Proses register
-    public function registerAdmin(Request $request)
-    {
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,penyelia',
-        ]);
-
-        $namaLengkap = $request->full_name;
-
-        if ($request->role === 'admin') {
-            Admin::create([
-                'nama_lengkap' => $namaLengkap,
-                'password_admin' => Hash::make($request->password),
-            ]);
-        } else {
-            if (Penyelia::count() >= 2) {
-                return redirect()->back()->with('error', 'Maksimal penyelia hanya 2 orang.');
-            }
-
-            Penyelia::create([
-                'nama_lengkap' => $namaLengkap,
-                'password_penyelia' => Hash::make($request->password),
-            ]);
-        }
-
-        return redirect()->route('admin.login')->with('success', 'Registrasi berhasil! Silakan login.');
-    }
-
     public function showLaporan(Request $request)
     {
         $bulan = $request->input('bulan', date('Y-m'));
@@ -117,7 +80,7 @@ class AdminController extends Controller
                 });
         }
 
-        return view('admin.laporan', compact('laporan'));
+        return view('admin.laporan', compact(var_name: 'laporan'));
     }
 
 
@@ -129,25 +92,22 @@ class AdminController extends Controller
     //     return Excel::download(new LaporanExport($bulan, $shift), 'laporan_kehadiran.xlsx');
     // }
 
-    public function updateStatus($id, Request $request)
+
+    // Dashboard penyelia
+    public function penyeliaDashboard()
     {
-        $status = $request->input('status_persetujuan');
-        $izinCuti = Izin::find($id) ?: Cuti::find($id);
-
-        if ($izinCuti) {
-            $izinCuti->status = $status;
-            $izinCuti->save();
-        }
-
-        return redirect()->back();
+        return view('penyelia.db');
     }
 
-
-    // Tampilkan form login
-    public function showLoginForm()
+    // Dashboard admin
+    public function admDashboard()
     {
-        return view('admin.login');
+        return view('admin.dashboard');
     }
 
-
+    public function pgDashboard()
+    {
+        return view(view: 'pegawai.home');
+    }
 }
+

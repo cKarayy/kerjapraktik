@@ -84,20 +84,6 @@
             document.getElementById('logout-form').submit();  // Melakukan submit form logout
             closePopup('popup-logout');  // Menutup popup
         }
-
-        // Memeriksa status logout dan memastikan pengguna tidak bisa kembali
-        if (sessionStorage.getItem("loggedOut") === "true") {
-            sessionStorage.removeItem("loggedOut");  // Menghapus status logout
-            window.location.href = "{{ route('pegawai.loginPg') }}";  // Redirect ke halaman login
-        }
-
-        // Menambahkan pengecekan ketika halaman dimuat (untuk mencegah kembali setelah logout)
-        window.onload = function() {
-            if (sessionStorage.getItem("loggedOut") === "true") {
-                sessionStorage.removeItem("loggedOut");  // Menghapus status logout
-                window.location.href = "{{ route('pegawai.loginPg') }}";  // Redirect ke halaman login
-            }
-        }
     </script>
 </body>
 </html>
