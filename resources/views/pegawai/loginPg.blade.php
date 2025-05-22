@@ -84,6 +84,9 @@
 </div>
 
 <script>
+    let verifiedUserType = '';
+    let verifiedUserId = '';
+
     // Fungsi toggle password
     function togglePassword(inputId, iconId) {
         let passwordInput = document.getElementById(inputId);
@@ -152,43 +155,42 @@
     document.getElementById('verifyUserBtn').addEventListener('click', function() {
         const resetFullName = document.getElementById('reset_full_name').value;
 
-        // Kirimkan permintaan verifikasi ke server untuk mengecek apakah pengguna ada
         fetch("/pegawai/verify-user", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({
-                full_name: resetFullName
-            })
-        }).then(response => response.json())
+            body: JSON.stringify({ full_name: resetFullName })
+        })
+        .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Menyembunyikan form nama lengkap dan tombol verifikasi setelah verifikasi berhasil
-                document.getElementById('reset_full_name').disabled = true;  // Menonaktifkan input nama lengkap
-                document.getElementById('verifyUserBtn').style.display = 'none';  // Menyembunyikan tombol verifikasi
+                // Simpan data userType dan userId dari response
+                verifiedUserType = data.user_type;
+                verifiedUserId = data.user_id;
 
-                // Menampilkan form untuk memasukkan password baru
+                document.getElementById('reset_full_name').disabled = true;
+                document.getElementById('verifyUserBtn').style.display = 'none';
                 document.getElementById('passwordForm').style.display = "block";
                 showNotification(data.message, 'success');
             } else {
                 showNotification(data.message, 'error');
             }
-        }).catch(error => {
-            console.error('Error:', error);
+        })
+        .catch(() => {
             showNotification('Terjadi kesalahan, coba lagi.', 'error');
         });
     });
 
     // Menangani submit form reset password
-    document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
+    document.querySelector('#popup-ubah-password form').addEventListener('submit', function(e) {
         e.preventDefault();
 
         const new_password = document.getElementById('new_password').value;
         const confirm_password = document.getElementById('confirm_password').value;
 
-        fetch("/pegawai/reset-password", {
+        fetch("/reset-password", {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
@@ -196,22 +198,21 @@
             },
             body: JSON.stringify({
                 new_password: new_password,
-                confirm_password: confirm_password
+                confirm_password: confirm_password,
+                user_type: verifiedUserType,
+                user_id: verifiedUserId
             })
-        }).then(response => response.json())
+        })
+        .then(response => response.json())
         .then(data => {
-                console.log(data.userInfo); // Menampilkan informasi login pengguna
-                console.log('Status:', data.status);
-                console.log('Message:', data.message);
-
             if (data.status === 'success') {
                 showNotification(data.message, 'success');
                 closePopup('popup-ubah-password');
             } else {
                 showNotification(data.message, 'error');
             }
-        }).catch(error => {
-            console.error('Error:', error);
+        })
+        .catch(() => {
             showNotification('Terjadi kesalahan, coba lagi.', 'error');
         });
     });

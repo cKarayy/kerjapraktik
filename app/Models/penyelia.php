@@ -15,9 +15,4 @@ class Penyelia extends Authenticatable
         return $this->sendPasswordResetNotification;
     }
 
-     public function setPasswordPenyeliaAttribute($value)
-    {
-        $this->attributes['password'] = bcrypt($value);
-    }
-
 }

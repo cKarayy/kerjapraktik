@@ -21,10 +21,9 @@ Route::get('/', function () {
 });
 
 Route::get('/penyelia/laporan', action: [LaporanController::class, 'index'])->name('penyelia.laporanPy');
+Route::get('/laporan/export', [LaporanController::class, 'export'])->name('penyelia.laporan.export');
 
-Route::get('/admin/laporan', [AdminController::class, 'showLaporan'])->name('admin.laporan');
-
-Route::get('/admin/export/laporan', [AdminController::class, 'export'])->name('admin.export.laporan');
+Route::get('/admin/laporan', [LaporanController::class, 'indexAdmin'])->name('admin.laporan');
 
 Route::get('/qrcode', [QRController::class, 'showQRCode'])->name('qrcode');
 
@@ -89,7 +88,7 @@ Route::prefix('shifts')->group(function () {
 });
 
 Route::post('/pegawai/verify-user', [LoginUserController::class, 'verifyUser'])->name('pegawai.verifyUser');
-Route::middleware(['auth:admin', 'auth:penyelia', 'auth:karyawans'])->post('/update-password', [LoginUserController::class, 'updatePassword'])->name('pegawai.resetPassword');
+Route::post('/reset-password', [LoginUserController::class, 'resetPasswordByName'])->name('pegawai.resetPassword');
 
 //pegawai
 Route::get('/pegawai/register', function () {
@@ -144,6 +143,10 @@ Route::post('/absensi/store', [AbsensiController::class, 'store'])
 
 Route::post('/absensi/scan', [AbsensiController::class, 'scan'])
     ->name('absensi.scan')
+    ->middleware('auth:karyawans');
+
+Route::post('/absensi/submit', [AbsensiController::class, 'sumbitAbsensi'])
+    ->name('absensi.submit')
     ->middleware('auth:karyawans');
 
 

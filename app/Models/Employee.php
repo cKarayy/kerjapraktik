@@ -49,10 +49,4 @@ class Employee extends Authenticatable
     {
         return $this->hasMany(Izin::class, 'id_karyawan');
     }
-    public function getAuthPassword()
-    {
-        return $this->attributes['password']; // Menggunakan kolom 'password' untuk otentikasi
-    }
-
-
 }

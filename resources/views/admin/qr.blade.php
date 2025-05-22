@@ -31,8 +31,7 @@
     <div class="card-content">
         <div class="image-container">
             @if($shift && $qrCode)
-                {!! $qrCode !!}  <!-- Menampilkan QR Code dalam format SVG -->
-                <p id="time-display" style="margin-top: 15px; font-weight: bold; text-align: center;"></p>
+                {!! $qrCode !!}
             @else
                 <p style="text-align:center;">Silakan pilih shift terlebih dahulu</p>
             @endif
@@ -43,25 +42,6 @@
         function selectShift(shift) {
             window.location.href = `?shift=${shift}`;
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const shift = "{{ request('shift') }}";
-            if (shift) {
-                // Countdown refresh
-                let timeLeft = 5;
-                const timeDisplay = document.getElementById("time-display");
-
-                const timer = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeDisplay.textContent = "Refresh in " + timeLeft + " second...";
-                        timeLeft--;
-                    } else {
-                        clearInterval(timer);
-                        window.location.reload();
-                    }
-                }, 1000);
-            }
-        });
     </script>
 </body>
 </html>

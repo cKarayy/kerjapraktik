@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Absensi extends Model
 {
     protected $primaryKey = 'id_absensi';
-    protected $fillable = ['id_karyawan', 'id_admin', 'tanggal', 'waktu_masuk', 'kehadiran', 'id_shift', 'keterlambatan', 'id_code'];
-
+    protected $fillable = [
+        'id_karyawan',
+        'id_admin',
+        'tanggal',
+        'waktu_masuk',
+        'kehadiran',
+        'id_shift',
+        'keterlambatan',
+        'id_code',
+        'bukti_foto' 
+    ];
 
     public function admin()
     {

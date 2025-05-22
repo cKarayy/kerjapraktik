@@ -14,40 +14,46 @@ use Carbon\Carbon;
 
 class QRController extends Controller
 {
-    // Menampilkan QR Code
-public function showQRCode(Request $request)
-{
-    $shift = $request->input('shift');
-    $qrCode = null;
+    public function showQRCode(Request $request)
+    {
+        $namaShift = $request->input('shift'); // ini 'pagi', 'middle', atau 'malam'
 
-    if ($shift) {
-        $uuid = Str::uuid();  // Generate UUID untuk QR Code
+        if (!$namaShift) {
+            return view('admin.qr', ['shift' => null, 'qrCode' => null]);
+        }
+
+        // Cari id_shift dari nama_shift
+        $shift = shifts::where('nama_shift', $namaShift)->first();
+
+        if (!$shift) {
+            return view('admin.qr', ['shift' => null, 'qrCode' => null]);
+        }
+
+        // Cari QR code berdasarkan id_shift
+        $existingQR = QR::where('id_shift', $shift->id_shift)->first();
+
+        if (!$existingQR) {
+            $uuid = (string) Str::uuid();
+
+            $existingQR = QR::create([
+                'id_admin' => Auth::guard('admin')->id(),
+                'kode' => $uuid,
+                'id_shift' => $shift->id_shift,
+            ]);
+        }
 
         $qrData = [
-            'uuid' => $uuid,
-            'shift' => $shift,
-            'timestamp' => now()->toDateTimeString()
+            'uuid' => $existingQR->kode,
+            'id_shift' => $existingQR->id_shift,
         ];
 
-        // Simpan QR code ke database
-        QR::create([
-            'id_admin' => auth('admin')->id(),
-            'kode' => $uuid,
-            'waktu_generate' => now(),
-            'kehadiran' => 'belum hadir',  // Status awal QR
-        ]);
-
-        // Generate QR Code dalam format SVG
         $qrCode = QrCode::format('svg')
             ->size(300)
             ->generate(json_encode($qrData));
+
+        return view('admin.qr', ['shift' => $namaShift, 'qrCode' => $qrCode]);
     }
 
-    return view('admin.qr', [
-        'shift' => $shift,
-        'qrCode' => $qrCode
-    ]);
-}
 
     // Memproses pemindaian QR Code
    public function scan(Request $request)
@@ -95,5 +101,62 @@ public function showQRCode(Request $request)
         return response()->json(['message' => 'Pegawai tidak ditemukan!'], 404);
     }
 }
+
+    public function validateLocation(Request $request)
+    {
+        $shift = QrCode::where('id_shift', $request->id_shift)->first();
+
+        if (!$shift) return response()->json(['valid' => false]);
+
+        $distance = $this->calculateDistance(
+            $shift->latitude, $shift->longitude,
+            $request->user_lat, $request->user_lon
+        );
+
+        return response()->json(['valid' => $distance <= 1]);
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000;
+        $lat1 = deg2rad($lat1);
+        $lon1 = deg2rad($lon1);
+        $lat2 = deg2rad($lat2);
+        $lon2 = deg2rad($lon2);
+
+        $dlat = $lat2 - $lat1;
+        $dlon = $lon2 - $lon1;
+
+        $a = sin($dlat/2) * sin($dlat/2) +
+            cos($lat1) * cos($lat2) *
+            sin($dlon/2) * sin($dlon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
+    }
+
+    public function submit(Request $request)
+    {
+        $request->validate([
+            'id_karyawan' => 'required',
+            'id_shift' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'foto' => 'required|image|max:2048',
+        ]);
+
+        $path = $request->file('foto')->store('absensi_foto', 'public');
+
+        Absensi::create([
+            'id_karyawan' => $request->id_karyawan,
+            'id_shift' => $request->id_shift,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'foto_path' => $path,
+            'waktu' => now(),
+        ]);
+
+        return redirect(to: 'pegawai.home')->with('success', 'Absensi berhasil!');
+    }
+
 
 }

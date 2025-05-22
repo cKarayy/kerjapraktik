@@ -71,6 +71,50 @@ class EmployeeController extends Controller
         return view('pegawai.registerPg', compact('shifts')); // Mengirim data shift ke view
     }
 
+     public function update(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'status' => 'required|string',
+            'shift'  => 'required|string',
+            'role'   => 'required|string',
+        ]);
+
+        // Temukan data pegawai berdasarkan ID
+        $employee = Employee::find($id);
+
+        if (!$employee) {
+            return response()->json(['message' => 'Pegawai tidak ditemukan.'], 404);
+        }
+
+        // Update status dan role (alias dari jabatan)
+        $employee->status  = $request->status;
+        $employee->jabatan = $request->role;
+
+        // Cari ID shift berdasarkan nama shift
+        $shift = shifts::where('nama_shift', $request->shift)->first();
+
+        if (!$shift) {
+            return response()->json(['message' => 'Shift tidak ditemukan.'], 404);
+        }
+
+        $employee->id_shift = $shift->id_shift;
+
+        // Simpan perubahan
+        $employee->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data berhasil diperbarui!',
+            'data'    => [
+                'id'     => $employee->id,
+                'status' => $employee->status,
+                'shift'  => $shift->nama_shift,
+                'role'   => $employee->jabatan,
+            ]
+        ]);
+    }
+
      // Menghapus pegawai
      public function delete($id)
     {

@@ -19,9 +19,4 @@ class Admin extends Authenticatable
     {
         return $this->password;
     }
-
-    public function setPasswordAdminAttribute($value)
-    {
-        $this->attributes['password'] = bcrypt($value);
-    }
 }
