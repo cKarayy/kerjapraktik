@@ -88,7 +88,7 @@ Route::prefix('shifts')->group(function () {
 });
 
 Route::post('/pegawai/verify-user', [LoginUserController::class, 'verifyUser'])->name('pegawai.verifyUser');
-Route::post('/reset-password', [LoginUserController::class, 'resetPasswordByName'])->name('pegawai.resetPassword');
+Route::post('/pegawai/reset-password', [LoginUserController::class, 'updatePassword'])->name('pegawai.resetPassword');
 
 //pegawai
 Route::get('/pegawai/register', function () {

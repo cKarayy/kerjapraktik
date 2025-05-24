@@ -79,52 +79,64 @@ class LoginUserController extends Controller
     }
     public function verifyUser(Request $request)
     {
+        // Validasi nama lengkap
         $request->validate([
             'full_name' => 'required|string',
         ]);
 
-        // Cari user di ketiga model berdasarkan nama lengkap
+        // Cari pengguna berdasarkan nama lengkap di ketiga model
         $user = Admin::where('nama_lengkap', $request->full_name)->first()
             ?: Penyelia::where('nama_lengkap', $request->full_name)->first()
             ?: Employee::where('nama_lengkap', $request->full_name)->first();
 
+        // Cek apakah pengguna ditemukan
         if (!$user) {
             return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
         }
 
-        // Kita bisa return juga tipe user untuk update nanti
+        // Mengembalikan ID karyawan atau ID pengguna lainnya (yang digunakan untuk memperbarui password)
         return response()->json([
             'status' => 'success',
             'message' => 'Pengguna ditemukan, silakan masukkan password baru.',
-            'user_type' => get_class($user),   // misal: App\Models\Admin, App\Models\Penyelia, atau App\Models\Employee
-            'user_id' => $user->id,             // untuk identifikasi user di update password
+            'user_id' => $user->id_karyawan,  // Mengembalikan id_karyawan yang digunakan di updatePassword
         ]);
     }
 
-   public function updatePassword(Request $request)
+    public function updatePassword(Request $request)
     {
-        $request->validate([
-            'user_type' => 'required|string',
-            'user_id' => 'required',
-            'password' => 'required|string|min:6|confirmed',
+        // Validasi input
+        $validated = $request->validate([
+            'new_password' => [
+                'required',
+                'string',
+                'min:6',
+                'confirmed',  // Laravel memeriksa new_password_confirmation
+                'regex:/[A-Z]/',  // Harus mengandung huruf kapital
+                'regex:/[0-9]/',  // Harus mengandung angka
+            ],
+            'new_password_confirmation' => 'required|string|same:new_password', // Pastikan konfirmasi password sama dengan password baru
+            'user_id' => 'required|string',  // Pastikan user_id dikirim
         ]);
 
-        $modelClass = $request->user_type;
+        try {
+            // Cari pengguna berdasarkan nama lengkap atau ID karyawan (user_id)
+            $user = Admin::where('id_admin', $request->user_id)
+                ?: Penyelia::where('id_penyelia', $request->user_id)
+                ?: Employee::where('id_karyawan', $request->user_id)
+                ->first();
 
-        if (!in_array($modelClass, [Admin::class, Penyelia::class, Employee::class])) {
-            return response()->json(['status' => 'error', 'message' => 'Tipe pengguna tidak valid.']);
+            if (!$user) {
+                return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
+            }
+
+            // Update password pengguna
+            $user->password = Hash::make($request->new_password);  // Encrypt password
+            $user->save();
+
+            return response()->json(['status' => 'success', 'message' => 'Password berhasil direset.']);
+        } catch (\Exception $e) {
+            // Tangani error dan kembalikan respons JSON
+            return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan saat memperbarui password.']);
         }
-
-        $user = $modelClass::find($request->user_id);
-
-        if (!$user) {
-            return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
-        }
-
-        $user->password = Hash::make($request->password); // atau setter kalau kamu pakai
-        $user->save();
-
-        return response()->json(['status' => 'success', 'message' => 'Password berhasil direset.']);
     }
-
 }
