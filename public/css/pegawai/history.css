@@ -23,6 +23,7 @@ body {
     max-width: 400px;
     margin: auto;
     padding: 20px;
+    margin-left: 400px;
 }
 
 .back-btn {
@@ -58,7 +59,11 @@ th, td {
 }
 
 th {
-    background-color: #FFD700;
+   background-color: #FFD700;
+ }
+
+.datetime {
+    white-space: nowrap; /* Mencegah pemisahan ke baris baru */
 }
 
 .logout-btn {

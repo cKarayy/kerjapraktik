@@ -27,20 +27,28 @@
                 {{-- Izin --}}
                 @foreach($izin as $item)
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</td>
-                        <td>Izin </td> <!-- Menampilkan jenis Izin -->
-                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
-                        <td>{{ $item->alasan ?? '-' }}</td> <!-- Menampilkan alasan -->
+                        <!-- Menampilkan waktu pengajuan izin dengan format tanggal dan waktu -->
+                        <td class="datetime">
+                            {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y, H:i:s') }}
+                        </td>
+                        <td>Izin</td>
+                        <td>{{ ucfirst($item->status) }}</td>
+                        <td>{{ $item->alasan ?? '-' }}</td>
                     </tr>
                 @endforeach
 
                 {{-- Cuti --}}
                 @foreach($cuti as $item)
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}</td>
-                        <td>Cuti</td> <!-- Menampilkan jenis Cuti -->
-                        <td>{{ ucfirst($item->status) }}</td> <!-- Menampilkan status -->
-                        <td>{{ $item->alasan ?? '-' }}</td> <!-- Menampilkan alasan -->
+                        <!-- Menampilkan tanggal mulai dan selesai cuti, serta waktu pengajuan -->
+                        <td class="datetime">
+                            {{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} -
+                            {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }},
+                            {{ \Carbon\Carbon::parse($item->created_at)->format('H:i:s') }}
+                        </td>
+                        <td>Cuti</td>
+                        <td>{{ ucfirst($item->status) }}</td>
+                        <td>{{ $item->alasan ?? '-' }}</td>
                     </tr>
                 @endforeach
 

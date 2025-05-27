@@ -15,6 +15,6 @@ class Kernel extends HttpKernel
      */
     protected $routeMiddleware = [
         'role' => \App\Http\Middleware\RoleMiddleware::class,  // Pastikan ini ada
-        // Middleware lainnya...
+        'noCache' => \App\Http\Middleware\NoCacheMiddleware::class,
     ];
 }

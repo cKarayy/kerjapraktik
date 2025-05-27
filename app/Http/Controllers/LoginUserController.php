@@ -70,13 +70,24 @@ class LoginUserController extends Controller
 
     public function logout(Request $request)
     {
+        // Logout dari semua guard yang digunakan
         Auth::guard('admin')->logout();
         Auth::guard('penyelia')->logout();
         Auth::guard('karyawans')->logout();
-        session()->flush(); // Menghapus semua data sesi
 
-        return redirect()->route('pegawai.loginPg');
+        // Menghapus data sesi
+        session()->flush();
+
+        // Mencegah caching browser pada halaman login
+        $response = redirect()->route('pegawai.loginPg');
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', 'Sat, 26 Jul 1997 05:00:00 GMT');
+
+        return $response;
     }
+
+
     public function verifyUser(Request $request)
     {
         // Validasi nama lengkap

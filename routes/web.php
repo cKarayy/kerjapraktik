@@ -13,6 +13,7 @@ use App\Models\Employee;
 use App\Http\Controllers\PegawaiHistoryController;
 use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Middleware\NoCacheMiddleware;
 use App\Models\Absensi;
 
 //admin
@@ -26,10 +27,6 @@ Route::get('/laporan/export', [LaporanController::class, 'export'])->name('penye
 Route::get('/admin/laporan', [LaporanController::class, 'indexAdmin'])->name('admin.laporan');
 
 Route::get('/qrcode', [QRController::class, 'showQRCode'])->name('qrcode');
-
-// Proses Scan QR Code (API)
-Route::post('/scan-qr', [QRController::class, 'scan'])->name('scan.qr');
-
 
 Route::get('/data_admin', function () {
     $employees = Employee::all()->map(function ($employee) {
@@ -95,10 +92,19 @@ Route::get('/pegawai/register', function () {
     return view('pegawai.registerPg');
 })->name('pegawai.register');
 
-//pegawai
 Route::get('/pegawai/login', function () {
     return view('pegawai.loginPg');
 })->name('pegawai.loginPg');
+
+Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
+Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
+Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+
+// Route::middleware('noCache')->group(function () {
+//     Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
+//     Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
+//     Route::post('/pegawai/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+// });
 
 Route::get('/register-karyawan', [EmployeeController::class, 'create'])->name('karyawans.create');
 
@@ -106,8 +112,6 @@ Route::post('/register-karyawan', action: [EmployeeController::class, 'store'])-
 
 Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->name('pegawai.registerPg');
 
-Route::get('/pegawai/login', [LoginUserController::class, 'showLoginForm'])->name('pegawai.loginPg');
-Route::post('/pegawai/login', [LoginUserController::class, 'login'])->name('pegawai.login.submit');
 
 Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 
@@ -120,7 +124,7 @@ Route::middleware(['auth:penyelia'])->group(function () {
 });
 
 
-Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.logout');
+
 
 Route::get('/pegawai/history', [PegawaiHistoryController::class, 'index'])->middleware('auth:karyawans')->name('pegawai.history');
 

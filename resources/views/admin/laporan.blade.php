@@ -54,7 +54,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>TANGGAL</th>
+                            <th>TANGGAL, WAKTU</th>
                             <th>NAMA LENGKAP</th>
                             <th>KEHADIRAN</th>
                             <th>KETERANGAN</th>
@@ -81,6 +81,7 @@
                 <table class="table">
                     <thead>
                         <tr>
+                            <th>TANGGAL, WAKTU PENGAJUAN</th>
                             <th>TANGGAL MULAI</th>
                             <th>TANGGAL SELESAI</th>
                             <th>NAMA LENGKAP</th>
@@ -91,6 +92,9 @@
                     <tbody>
                         @forelse($cuti as $item)
                         <tr>
+                            <!-- Menambahkan koma di antara tanggal dan waktu pengajuan -->
+                            <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }},
+                                {{ \Carbon\Carbon::parse($item->created_at)->format('H:i:s') }}</td>
                             <td>{{ $item->tanggal_mulai }}</td>
                             <td>{{ $item->tanggal_selesai }}</td>
                             <td>{{ $item->karyawan->nama_lengkap ?? 'N/A' }}</td>
@@ -99,7 +103,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" style="text-align:center;">Tidak ada data cuti untuk bulan ini.</td>
+                            <td colspan="6" style="text-align:center;">Tidak ada data cuti untuk bulan ini.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -108,7 +112,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>TANGGAL</th>
+                            <th>TANGGAL, WAKTU PENGAJUAN</th>
                             <th>NAMA LENGKAP</th>
                             <th>ALASAN</th>
                             <th>STATUS</th>
@@ -117,14 +121,16 @@
                     <tbody>
                         @forelse($izin as $item)
                         <tr>
-                            <td>{{ $item->tanggal }}</td>
+                            <!-- Menambahkan koma di antara tanggal dan waktu pengajuan -->
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }},
+                                {{ \Carbon\Carbon::parse($item->created_at)->format('H:i:s') }}</td>
                             <td>{{ $item->karyawan->nama_lengkap ?? 'N/A' }}</td>
                             <td>{{ $item->alasan }}</td>
                             <td>{{ ucfirst($item->status) }}</td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" style="text-align:center;">Tidak ada data izin untuk bulan ini.</td>
+                            <td colspan="5" style="text-align:center;">Tidak ada data izin untuk bulan ini.</td>
                         </tr>
                         @endforelse
                     </tbody>
