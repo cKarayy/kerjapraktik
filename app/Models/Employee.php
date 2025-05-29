@@ -13,23 +13,6 @@ class Employee extends Authenticatable
     protected $hidden = ['password'];
      protected $casts = ['password' => 'hashed'];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($karyawan) {
-            // Menetapkan role berdasarkan kode di username
-            if (str_ends_with($karyawan->username, '1')) {
-                $karyawan->role = 'admin';
-            } elseif (str_ends_with($karyawan->username, '2')) {
-                $karyawan->role = 'pegawai';
-            } else {
-                // Default role jika tidak ada kode yang sesuai
-                $karyawan->role = 'pegawai';
-            }
-        });
-    }
-
     public function shift()
     {
         return $this->belongsTo(shifts::class, 'id_shift');

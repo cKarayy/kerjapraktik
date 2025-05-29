@@ -11,7 +11,7 @@ class Admin extends Authenticatable
 
     protected $primaryKey = 'id_admin';
 
-     protected $fillable = ['nama_lengkap', 'password'];
+     protected $fillable = ['username', 'nama_lengkap', 'password'];
 
     protected $hidden = ['password'];
 

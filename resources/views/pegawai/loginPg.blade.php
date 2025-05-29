@@ -22,8 +22,8 @@
         <form id="loginForm" action="{{ route('pegawai.login.submit') }}" method="POST">
             @csrf
             <div class="input-container">
-                <label class="label-text" for="full_name">Nama Lengkap</label>
-                <input type="text" id="full_name" name="full_name" required>
+                <label class="label-text" for="username">Username</label>
+                <input type="text" id="username" name="username" required>
             </div>
 
             <div class="input-container">
@@ -136,7 +136,7 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const full_name = document.getElementById('full_name').value;
+        const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
         fetch("/pegawai/login", {
@@ -146,7 +146,7 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({
-                full_name: full_name,
+                username: username,
                 password: password
             })
         }).then(response => response.json())

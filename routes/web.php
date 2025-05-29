@@ -107,11 +107,8 @@ Route::post('/logout', [LoginUserController::class, 'logout'])->name('pegawai.lo
 // });
 
 Route::get('/register-karyawan', [EmployeeController::class, 'create'])->name('karyawans.create');
-
 Route::post('/register-karyawan', action: [EmployeeController::class, 'store'])->name('karyawans.store');
-
 Route::get('/pegawai/register', [EmployeeController::class, 'showRegister'])->name('pegawai.registerPg');
-
 
 Route::middleware('auth:karyawans')->get('/pegawai/home', [LoginUserController::class, 'home'])->name('pegawai.home');
 

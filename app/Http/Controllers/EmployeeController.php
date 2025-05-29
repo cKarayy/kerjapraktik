@@ -18,44 +18,61 @@ class EmployeeController extends Controller
         return view('pegawai.registerPg', compact('shifts')); // Mengirim data shift ke view
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
+
+         $messages = [
+            'password.regex' => 'Password harus mengandung minimal satu huruf besar dan satu angka.',
+            'password.min' => 'Password minimal 6 karakter.',
+        ];
+
         // Validasi input dari form
         $request->validate([
-            'full_name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:karyawans,username',  // Validasi untuk username
+            'nama_lengkap' => 'required|string|max:255',  // Validasi untuk nama lengkap
             'jabatan' => 'required|string|max:100',
-            'shift' => 'required|string|exists:shifts,nama_shift', // Pastikan shift ada di database
-            'role' => 'required|string|in:pegawai,admin,penyelia', // Pastikan role sesuai
-            'password' => 'required|string|confirmed|min:6',
-        ]);
+            'shift' => 'required|string|exists:shifts,nama_shift',  // Pastikan shift ada di database
+            'role' => 'required|string|in:pegawai,admin,penyelia',  // Pastikan role sesuai
+            'password' => [
+                'required',
+                'string',
+                'min:6',
+                'regex:/^(?=.*[A-Z])(?=.*\d).+$/',
+                'confirmed'
+            ], // Validasi password
+        ], $messages);
 
-        // Mencari data shift berdasarkan nama_shift
+
+        // Cari shift berdasarkan nama_shift
         $shift = shifts::where('nama_shift', $request->shift)->first();
 
         if (!$shift) {
             return back()->withErrors(['shift' => 'Shift tidak ditemukan.'])->withInput();
         }
 
+        $role = $request->role ?? 'pegawai';
+
         // Membuat data pegawai di tabel Employee
         $employee = Employee::create([
-            'nama_lengkap' => Str::title($request->full_name),
+            'nama_lengkap' => Str::title($request->nama_lengkap),
+            'username' => $request->username,  // Pastikan username sudah ada
             'jabatan' => strtoupper($request->jabatan),
-            'id_shift' => $shift->id_shift, // Gunakan id_shift yang ditemukan
-            'role' => $request->role,
+            'id_shift' => $shift->id_shift,
+            'role' => $role,
             'password' => Hash::make($request->password),
         ]);
 
-        // Jika role adalah 'Admin', simpan ke tabel Admin
+        // Simpan berdasarkan role
         if ($request->role == 'admin') {
             Admin::create([
                 'nama_lengkap' => $employee->nama_lengkap,
+                'username' => $employee->username,  // Pastikan username disalin dari employee
                 'password' => $employee->password,
             ]);
-        }
-        // Jika role adalah 'Penyelia', simpan ke tabel Penyelia
-        elseif ($request->role == 'penyelia') {
+        } elseif ($request->role == 'penyelia') {
             Penyelia::create([
                 'nama_lengkap' => $employee->nama_lengkap,
+                'username' => $employee->username,  // Pastikan username disalin dari employee
                 'password' => $employee->password,
             ]);
         }

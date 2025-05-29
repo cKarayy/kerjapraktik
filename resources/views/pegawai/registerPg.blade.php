@@ -21,9 +21,15 @@
             <div class="line"></div>
 
             <div class="input-row">
-                <label class="label-text" for="full_name">Nama Lengkap</label>
-                <input type="text" id="full_name" name="full_name" class="input-style" required>
+                <label class="label-text" for="nama_lengkap">Nama Lengkap</label>
+                <input type="text" id="nama_lengkap" name="nama_lengkap" class="input-style" required>
             </div>
+
+            <div class="input-row">
+                <label class="label-text" for="username">Username</label>
+                <input type="text" id="username" name="username" class="input-style" required>
+            </div>
+
 
             <div class="input-row">
                 <label class="label-text" for="jabatan">Jabatan</label>
@@ -57,6 +63,11 @@
                     <i id="toggleEyePassword" class="fa-solid fa-eye-slash toggle-password"
                        onclick="togglePassword('password', 'toggleEyePassword')"></i>
                 </div>
+                @error('password')
+                    @if (!str_contains($message, 'confirmation'))
+                        <div class="error-message" style="color:red; font-size: 14px;">{{ $message }}</div>
+                    @endif
+                @enderror
             </div>
 
             <div class="input-row">
@@ -66,11 +77,21 @@
                     <i id="toggleEyeConfirm" class="fa-solid fa-eye-slash toggle-password"
                        onclick="togglePassword('password_confirmation', 'toggleEyeConfirm')"></i>
                 </div>
+                @error('password_confirmation')
+                    <div class="error-message" style="color:red; font-size: 14px;">{{ $message }}</div>
+                @else
+                    @error('password')
+                        @if (str_contains($message, 'confirmation'))
+                            <div class="error-message" style="color:red; font-size: 14px;">{{ $message }}</div>
+                        @endif
+                    @enderror
+                @enderror
             </div>
 
             <button type="submit" class="register-btn">REGISTER</button>
         </div>
     </form>
+
 </div>
 
 <script>
