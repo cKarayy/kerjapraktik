@@ -217,6 +217,12 @@ input {
     width: 100%;
 }
 
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
 .btn-done {
     background: #00FF57;
     color: black;
@@ -264,7 +270,7 @@ input {
     border-radius: 10px;
     cursor: pointer;
     flex: 1;
-    margin-left: 80px;
+    margin-left: 5px;
     transition: background 0.3s ease; /* Menambahkan efek transisi */
 }
 

@@ -51,42 +51,36 @@
 <div id="popup-ubah-password" class="popup">
     <div class="popup-content">
         <h3>RESET PASSWORD</h3>
-        <form method="POST" action="{{ route('pegawai.resetPassword') }}">
+        <form method="POST" id="resetPasswordForm">
             @csrf
-            <!-- Kolom Nama Lengkap -->
+            <!-- Kolom Username -->
             <div class="password-container">
-                <input type="text" id="reset_full_name" name="reset_full_name" placeholder="Nama Lengkap" required>
+                <input type="text" id="reset_username" name="reset_username" placeholder="Username" required>
             </div>
 
-            <button type="button" class="btn-verify" id="verifyUserBtn">VERIFIKASI</button>
+            <!-- Tombol Verifikasi dan Cancel (Awal) -->
+            <div id="verificationButtons" class="button-group">
+                <button type="button" class="btn-verify" id="verifyUserBtn">VERIFIKASI</button>
+                <button type="button" class="btn-cancel" onclick="closePopup('popup-ubah-password')">CANCEL</button>
+            </div>
 
-            <!-- Form Password Baru (Tersembunyi Awalnya) -->
+            <!-- Form Password Baru -->
             <div id="passwordForm" style="display:none;">
                 <input type="hidden" id="user_id" name="user_id" value="">
 
                 <div class="password-container">
                     <input type="password" id="new_password" name="new_password" placeholder="Password Baru" required>
                     <i id="toggleEyeNew" class="fa-solid fa-eye-slash" onclick="togglePassword('new_password', 'toggleEyeNew')"></i>
-
-                    @error('new_password')
-                        <div class="error-message" style="color: red; text-align: center; padding: 10px; border: 1px solid red; margin-bottom: 15px;">
-                            {{ $message }} <!-- Menampilkan pesan error jika ada -->
-                        </div>
-                    @enderror
                 </div>
 
                 <div class="password-container">
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="Konfirmasi Password" required>
                     <i id="toggleEyeConfirm" class="fa-solid fa-eye-slash" onclick="togglePassword('confirm_password', 'toggleEyeConfirm')"></i>
-
-                    @error('confirm_password')
-                        <div class="error-message" style="color: red; text-align: center; padding: 10px; border: 1px solid red; margin-bottom: 15px;">
-                            {{ $message }} <!-- Menampilkan pesan error jika ada -->
-                        </div>
-                    @enderror
                 </div>
+
                 <button type="submit" class="btn-done">DONE</button>
-                <button type="button" class="btn-cancel" onclick="closePopup('popup-ubah-password')">CANCEL</button>
+                <button type="submit" class="btn-cancel">CANCEL</button>
+
             </div>
         </form>
     </div>
@@ -130,7 +124,27 @@
     function closePopup(popupId) {
         var popup = document.getElementById(popupId);
         popup.style.display = "none";
+
+        // Reset semua elemen form ke state awal
+        document.getElementById('resetPasswordForm').reset();
+        document.getElementById('passwordForm').style.display = 'none';
+
+        // Tampilkan kembali tombol verifikasi dan cancel
+        document.getElementById('verificationButtons').style.display = 'flex'; // atau 'block' tergantung CSS
+
+        // Aktifkan kembali input username
+        document.getElementById('reset_username').disabled = false;
+
+        // Tampilkan tombol verifikasi (jika sebelumnya dihide)
+        document.getElementById('verifyUserBtn').style.display = 'block';
     }
+
+    // Update event listener untuk tombol cancel
+    document.querySelectorAll('.btn-cancel').forEach(button => {
+        button.addEventListener('click', function() {
+            closePopup('popup-ubah-password');
+        });
+    });
 
     // Menangani submit form login
     document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -167,10 +181,10 @@
 
     // Verifikasi Nama Lengkap dan Tampilkan Form Password Baru
     document.getElementById('verifyUserBtn').addEventListener('click', function() {
-        const resetFullName = document.getElementById('reset_full_name').value;
+        const resetUsername = document.getElementById('reset_username').value;
 
         // Log nama lengkap yang dikirim
-        console.log("Nama Lengkap yang Dikirimkan: " + resetFullName);
+        console.log("Username yang Dikirimkan: " + resetUsername);
 
         fetch("/pegawai/verify-user", {
             method: "POST",
@@ -178,7 +192,7 @@
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ full_name: resetFullName })
+            body: JSON.stringify({ username: resetUsername })
         })
         .then(response => response.json())
         .then(data => {
@@ -189,14 +203,15 @@
                 // Simpan user_id dari response untuk digunakan di form password
                 verifiedUserId = data.user_id;  // Ambil user_id yang dikirim dari backend
 
-                document.getElementById('reset_full_name').disabled = true;
-                document.getElementById('verifyUserBtn').style.display = 'none';
+                document.getElementById('user_id').value = verifiedUserId;
+                document.getElementById('reset_username').disabled = true;
+                document.getElementById('verificationButtons').style.display = 'none';
                 document.getElementById('passwordForm').style.display = "block";  // Menampilkan form password setelah verifikasi
 
                 console.log("User ID yang Ditemukan: ", verifiedUserId);
-                showNotification(data.message, 'success');
+                showNotification;
             } else {
-                showNotification(data.message, 'error');
+                showNotification;
             }
         })
         .catch(() => {
@@ -209,17 +224,22 @@
         e.preventDefault();
 
         // Ambil nilai dari form
-        const newPassword = document.getElementById('new_password').value.trim();
-        const confirmPassword = document.getElementById('confirm_password').value.trim();
-        const fullName = document.getElementById('reset_full_name').value;
-        const userId = document.getElementById('user_id').value;
+        const formData = new FormData(this);
+        const newPassword = formData.get('new_password');
+        const confirmPassword = formData.get('confirm_password');
+        const userId = formData.get('user_id');
 
         console.log("New Password: " + newPassword);
         console.log("Confirm Password: " + confirmPassword);
+        console.log("User ID: " + userId);
 
-        // Cek apakah password baru dan konfirmasi password cocok
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            showNotification('Password harus minimal 6 karakter, mengandung huruf kapital dan angka.', 'error');
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
-            console.log('Password dan konfirmasi password tidak cocok.');
             showNotification('Password dan konfirmasi password tidak cocok.', 'error');
             return;
         }
@@ -231,29 +251,94 @@
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json' // Penting untuk meminta response JSON
             },
             body: JSON.stringify({
                 user_id: userId,
                 new_password: newPassword,
-                confirm_password: confirmPassword,
+                new_password_confirmation: confirmPassword // Sesuai dengan validasi Laravel
             })
         })
-        .then(response => response.json())  // Mengubah respons menjadi JSON
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+
+            // Cek jika response bukan JSON
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Response bukan JSON:', text);
+                throw new Error('Terjadi kesalahan pada server');
+            }
+
+            return response.json();
+        })
         .then(data => {
             console.log("Respons Reset Password: ", data);
 
             if (data.status === 'success') {
                 showNotification(data.message, 'success');
                 closePopup('popup-ubah-password');
+                // Reset form
+                document.getElementById('resetPasswordForm').reset();
+                document.getElementById('passwordForm').style.display = 'none';
+                document.getElementById('reset_username').disabled = false;
+                document.getElementById('verifyUserBtn').style.display = 'block';
             } else {
-                console.log("Error response from server:", data.message);  // Log error message dari server
+                showNotification(data.message || 'Terjadi kesalahan', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(error.message || 'Terjadi kesalahan saat menghubungi server.', 'error');
+        });
+    });
+
+    // Verifikasi User
+    document.getElementById('verifyUserBtn').addEventListener('click', function() {
+        const resetUsername = document.getElementById('reset_username').value.trim();
+
+        if (!resetUsername) {
+            showNotification('Username harus diisi', 'error');
+            return;
+        }
+
+        console.log("Username yang Dikirimkan: " + resetUsername);
+
+        fetch("/pegawai/verify-user", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ username: resetUsername })
+        })
+        .then(async response => {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error(text || 'Invalid response from server');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Respons dari Server: ", data);
+
+            if (data.status === 'success') {
+                document.getElementById('user_id').value = data.user_id;
+                document.getElementById('reset_username').disabled = true;
+                document.getElementById('verifyUserBtn').style.display = 'none';
+                document.getElementById('passwordForm').style.display = "block";
+
+                console.log("User ID yang Ditemukan: ", data.user_id);
+                showNotification(data.message, 'success');
+            } else {
                 showNotification(data.message, 'error');
             }
         })
         .catch(error => {
-            console.error('Error:', error);  // Log error yang terjadi di fetch
-            showNotification('Terjadi kesalahan saat menghubungi server.', 'error');
+            console.error('Error:', error);
+            showNotification(error.message || 'Terjadi kesalahan, coba lagi.', 'error');
         });
     });
 

@@ -67,13 +67,11 @@ class EmployeeController extends Controller
             Admin::create([
                 'nama_lengkap' => $employee->nama_lengkap,
                 'username' => $employee->username,  // Pastikan username disalin dari employee
-                'password' => $employee->password,
             ]);
         } elseif ($request->role == 'penyelia') {
             Penyelia::create([
                 'nama_lengkap' => $employee->nama_lengkap,
                 'username' => $employee->username,  // Pastikan username disalin dari employee
-                'password' => $employee->password,
             ]);
         }
 

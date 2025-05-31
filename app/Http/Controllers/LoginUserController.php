@@ -23,29 +23,46 @@ class LoginUserController extends Controller
             'password' => 'required',
         ]);
 
-        // Admin
+        // Coba login sebagai admin
         $admin = Admin::where('username', $request->username)->first();
         if ($admin && Hash::check($request->password, $admin->password)) {
             Auth::guard('admin')->login($admin);
-            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('admin.dashboard')]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Login berhasil',
+                'redirectUrl' => route('admin.dashboard'),
+                'userType' => 'admin' // Tambahkan identifikasi tipe user
+            ]);
         }
 
-        // Penyelia
+        // Coba login sebagai penyelia
         $penyelia = Penyelia::where('username', $request->username)->first();
         if ($penyelia && Hash::check($request->password, $penyelia->password)) {
             Auth::guard('penyelia')->login($penyelia);
-            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('dashboard_py')]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Login berhasil',
+                'redirectUrl' => route('dashboard_py'),
+                'userType' => 'penyelia' // Tambahkan identifikasi tipe user
+            ]);
         }
 
-        // Pegawai
+        // Coba login sebagai pegawai
         $pegawai = Employee::where('username', $request->username)->first();
         if ($pegawai && Hash::check($request->password, $pegawai->password)) {
             Auth::guard('karyawans')->login($pegawai);
-            return response()->json(['status' => 'success', 'message' => 'Login berhasil', 'redirectUrl' => route('pegawai.home')]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Login berhasil',
+                'redirectUrl' => route('pegawai.home'),
+                'userType' => 'pegawai' // Tambahkan identifikasi tipe user
+            ]);
         }
 
-
-        return response()->json(['status' => 'error', 'message' => 'Username atau password salah.']);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Username atau password salah.'
+        ]);
     }
 
 
@@ -83,56 +100,91 @@ class LoginUserController extends Controller
 
     public function verifyUser(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-        ]);
-
-        $user = Admin::where('username', $request->username)->first()
-            ?: Penyelia::where('username', $request->username)->first()
-            ?: Employee::where('username', $request->username)->first();
-
-        if (!$user) {
-            return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Pengguna ditemukan, silakan masukkan password baru.',
-            'user_id' => $user->id_karyawan,  // Pastikan id_karyawan ada di model
-        ]);
-    }
-
-    public function updatePassword(Request $request)
-    {
-        $validated = $request->validate([
-            'new_password' => [
-                'required',
-                'string',
-                'min:6',
-                'confirmed',
-                'regex:/[A-Z]/',  // Harus mengandung huruf kapital
-                'regex:/[0-9]/',  // Harus mengandung angka
-            ],
-            'new_password_confirmation' => 'required|string|same:new_password',
-            'user_id' => 'required|string',
-        ]);
-
         try {
-            $user = Admin::where('id_admin', $request->user_id)
-                ?: Penyelia::where('id_penyelia', $request->user_id)
-                ?: Employee::where('id_karyawan', $request->user_id)
-                ->first();
+            $request->validate([
+                'username' => 'required|string',
+            ]);
+
+            $user = Employee::where('username', $request->username)->first();
 
             if (!$user) {
-                return response()->json(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.']);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Pengguna tidak ditemukan.'
+                ], 404);
             }
 
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Pengguna ditemukan, silakan masukkan password baru.',
+                'user_id' => $user->id_karyawan
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan server'
+            ], 500);
+        }
+    }
+
+   public function updatePassword(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'new_password' => [
+                    'required',
+                    'string',
+                    'min:6',
+                    'confirmed',
+                    'regex:/[A-Z]/',
+                    'regex:/[0-9]/'
+                ],
+                'new_password_confirmation' => 'required|string|same:new_password',
+                'user_id' => 'required|integer|exists:karyawans,id_karyawan',
+            ]);
+
+            $user = Employee::where('id_karyawan', $request->user_id)->firstOrFail();
+
+            // Update password di tabel Employee
             $user->password = Hash::make($request->new_password);
             $user->save();
 
-            return response()->json(['status' => 'success', 'message' => 'Password berhasil direset.']);
+            // Sync password ke tabel Admin jika ada
+            if ($user->role === 'admin') {
+                $admin = Admin::where('username', $user->username)->first();
+                if ($admin) {
+                    $admin->password = Hash::make($request->new_password);
+                    $admin->save();
+                }
+            }
+
+            // Sync password ke tabel Penyelia jika ada
+            if ($user->role === 'penyelia') {
+                $penyelia = Penyelia::where('username', $user->username)->first();
+                if ($penyelia) {
+                    $penyelia->password = Hash::make($request->new_password);
+                    $penyelia->save();
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Password berhasil direset.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan saat memperbarui password.']);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+            ], 500);
         }
     }
+
+
 }
